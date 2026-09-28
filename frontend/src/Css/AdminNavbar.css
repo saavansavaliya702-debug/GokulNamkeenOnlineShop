@@ -1,0 +1,334 @@
+/* ─────────────────────────────────────────────
+   Admin Navbar — Clean & Modern
+───────────────────────────────────────────── */
+
+:root {
+  --an-primary: #16a34a;
+  --an-primary-dark: #15803d;
+  --an-primary-soft: #dcfce7;
+  --an-bg: #0f172a;
+  --an-bg-soft: #1e293b;
+  --an-text: #f1f5f9;
+  --an-text-muted: #94a3b8;
+  --an-border: #334155;
+  --an-radius: 12px;
+  --an-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* ─── Mobile top bar (visible only on small screens) ─── */
+.admin-mobile-bar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 1001;
+  background: var(--an-bg);
+  padding: 12px 16px;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--an-border);
+}
+
+.admin-mobile-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.admin-mobile-brand .logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.menu-toggle {
+  width: 42px;
+  height: 42px;
+  border: none;
+  background: var(--an-bg-soft);
+  color: white;
+  border-radius: 10px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.menu-toggle:hover,
+.menu-toggle.open {
+  background: var(--an-primary);
+}
+
+/* Backdrop */
+.nav-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+}
+
+/* ─── Main Navbar ─── */
+.admin-navbar {
+  background: var(--an-bg);
+  color: var(--an-text);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: var(--an-shadow);
+  border-bottom: 1px solid var(--an-border);
+}
+
+.nav-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+/* Brand */
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: white;
+  flex-shrink: 0;
+}
+
+.nav-brand .logo {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 2px solid var(--an-border);
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.brand-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.brand-role {
+  font-size: 0.72rem;
+  color: var(--an-primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Nav links */
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  justify-content: center;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  color: var(--an-text-muted);
+  text-decoration: none;
+  font-size: 0.92rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.nav-link:hover {
+  background: var(--an-bg-soft);
+  color: white;
+}
+
+.nav-link.active {
+  background: var(--an-primary-soft);
+  color: var(--an-primary-dark);
+  font-weight: 600;
+}
+
+.nav-icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* User area */
+.nav-user-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--an-bg-soft);
+  padding: 6px 12px 6px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--an-border);
+}
+
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--an-primary), #22c55e);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.user-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.user-name {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: white;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-role {
+  font-size: 0.7rem;
+  color: var(--an-text-muted);
+}
+
+.logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1.5px solid var(--an-border);
+  color: var(--an-text-muted);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: #7f1d1d;
+  border-color: #991b1b;
+  color: #fecaca;
+}
+
+.logout-icon {
+  font-size: 1rem;
+}
+
+/* ─── Mobile styles ─── */
+@media (max-width: 900px) {
+  .admin-mobile-bar {
+    display: flex;
+  }
+
+  .admin-navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: min(300px, 85vw);
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    border-right: 1px solid var(--an-border);
+    border-bottom: none;
+    overflow-y: auto;
+  }
+
+  .admin-navbar.mobile-open {
+    transform: translateX(0);
+  }
+
+  .nav-wrapper {
+    flex-direction: column;
+    align-items: stretch;
+    height: auto;
+    padding: 24px 16px 32px;
+    gap: 28px;
+  }
+
+  .nav-brand {
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--an-border);
+  }
+
+  .nav-menu {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    justify-content: flex-start;
+  }
+
+  .nav-link {
+    padding: 12px 14px;
+    font-size: 1rem;
+  }
+
+  .nav-user-area {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--an-border);
+  }
+
+  .user-chip {
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+
+  .user-name {
+    max-width: none;
+  }
+
+  .logout-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+  }
+}
+
+/* Desktop: hide mobile bar */
+@media (min-width: 901px) {
+  .admin-mobile-bar {
+    display: none !important;
+  }
+}

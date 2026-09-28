@@ -1,0 +1,470 @@
+/* ─────────────────────────────────────────────
+   Add Product — Clean Admin Form
+───────────────────────────────────────────── */
+
+:root {
+  --ap-primary: #16a34a;
+  --ap-primary-dark: #15803d;
+  --ap-primary-soft: #dcfce7;
+  --ap-bg: #f1f5f9;
+  --ap-card: #ffffff;
+  --ap-text: #0f172a;
+  --ap-muted: #64748b;
+  --ap-border: #e2e8f0;
+  --ap-radius: 16px;
+  --ap-radius-sm: 10px;
+  --ap-danger: #dc2626;
+}
+
+.ap-page {
+  min-height: 100vh;
+  background: var(--ap-bg);
+  padding: 28px 16px 60px;
+  color: var(--ap-text);
+}
+
+.ap-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Header */
+.ap-header {
+  margin-bottom: 24px;
+}
+
+.ap-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  border: 1.5px solid var(--ap-border);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--ap-text);
+  margin-bottom: 16px;
+  transition: all 0.2s;
+}
+
+.ap-back:hover {
+  background: var(--ap-primary-soft);
+  border-color: #86efac;
+  color: var(--ap-primary-dark);
+}
+
+.ap-header-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.ap-header-icon {
+  width: 52px;
+  height: 52px;
+  background: white;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+  flex-shrink: 0;
+}
+
+.ap-badge {
+  display: inline-block;
+  background: var(--ap-primary-soft);
+  color: var(--ap-primary-dark);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.ap-header h1 {
+  margin: 0 0 4px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.ap-header p {
+  margin: 0;
+  color: var(--ap-muted);
+  font-size: 0.95rem;
+}
+
+/* Form */
+.ap-form {
+  background: var(--ap-card);
+  border-radius: var(--ap-radius);
+  padding: 28px;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.05);
+  border: 1px solid var(--ap-border);
+}
+
+.ap-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr;
+  gap: 32px;
+}
+
+@media (max-width: 860px) {
+  .ap-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ap-section {
+  margin-bottom: 28px;
+}
+
+.ap-section-title {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ap-border);
+}
+
+/* Fields */
+.ap-field {
+  margin-bottom: 16px;
+}
+
+.ap-field label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--ap-text);
+}
+
+.req {
+  color: var(--ap-danger);
+}
+
+.ap-field input,
+.ap-field select,
+.ap-field textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--ap-border);
+  border-radius: var(--ap-radius-sm);
+  font-size: 0.95rem;
+  color: var(--ap-text);
+  background: #f8fafc;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  font-family: inherit;
+}
+
+.ap-field input:focus,
+.ap-field select:focus,
+.ap-field textarea:focus {
+  border-color: var(--ap-primary);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+  background: white;
+}
+
+.ap-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.ap-row.three {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+@media (max-width: 600px) {
+  .ap-row,
+  .ap-row.three {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Prefix input */
+.input-prefix {
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border: 1.5px solid var(--ap-border);
+  border-radius: var(--ap-radius-sm);
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-prefix:focus-within {
+  border-color: var(--ap-primary);
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
+  background: white;
+}
+
+.input-prefix span {
+  padding: 0 12px;
+  color: var(--ap-muted);
+  font-weight: 600;
+  background: #f1f5f9;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.input-prefix input {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  flex: 1;
+}
+
+/* Image mode tabs */
+.image-mode-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.mode-tab {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1.5px solid var(--ap-border);
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--ap-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mode-tab:hover {
+  border-color: #86efac;
+  color: var(--ap-primary-dark);
+}
+
+.mode-tab.active {
+  background: var(--ap-primary-soft);
+  border-color: var(--ap-primary);
+  color: var(--ap-primary-dark);
+  font-weight: 600;
+}
+
+/* Dropzone */
+.dropzone {
+  position: relative;
+  border: 2px dashed var(--ap-border);
+  border-radius: var(--ap-radius);
+  background: #f8fafc;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  overflow: hidden;
+}
+
+.dropzone.drag-over {
+  border-color: var(--ap-primary);
+  background: var(--ap-primary-soft);
+}
+
+.dropzone.has-preview {
+  border-style: solid;
+  padding: 0;
+}
+
+.dropzone-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.dropzone-content {
+  text-align: center;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.drop-icon {
+  font-size: 2.4rem;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.dropzone-content p {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.dropzone-content span {
+  color: var(--ap-muted);
+  font-weight: 400;
+}
+
+.drop-hint {
+  font-size: 0.8rem;
+  color: var(--ap-muted);
+}
+
+.preview-wrap {
+  position: relative;
+  width: 100%;
+  min-height: 200px;
+}
+
+.preview-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  min-height: 200px;
+}
+
+.remove-preview {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.7);
+  color: white;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.remove-preview:hover {
+  background: var(--ap-danger);
+}
+
+.ap-preview {
+  margin-top: 12px;
+  border-radius: var(--ap-radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--ap-border);
+}
+
+.ap-preview img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+/* Summary */
+.summary-card {
+  background: #f8fafc;
+  border: 1px solid var(--ap-border);
+  border-radius: var(--ap-radius-sm);
+  padding: 18px;
+  margin-top: 20px;
+}
+
+.summary-card h3 {
+  margin: 0 0 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.summary-card ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.summary-card li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.88rem;
+}
+
+.summary-card li span {
+  color: var(--ap-muted);
+}
+
+.summary-card li strong {
+  text-align: right;
+  font-weight: 600;
+}
+
+/* Actions */
+.ap-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--ap-border);
+}
+
+.ap-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.ap-btn-primary {
+  background: var(--ap-primary);
+  color: white;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+}
+
+.ap-btn-primary:hover:not(:disabled) {
+  background: var(--ap-primary-dark);
+  transform: translateY(-1px);
+}
+
+.ap-btn-primary:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.ap-btn-secondary {
+  background: white;
+  color: var(--ap-text);
+  border: 1.5px solid var(--ap-border);
+}
+
+.ap-btn-secondary:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.ap-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

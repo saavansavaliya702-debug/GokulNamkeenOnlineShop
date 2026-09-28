@@ -1,0 +1,338 @@
+/* ═══════════════════════════════════════════════════════════════
+   404 — Modern dark page
+   Aurora background · glass card · animated zero
+   ═══════════════════════════════════════════════════════════════ */
+
+.nf-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #05060a;
+  color: #f5f5f7;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Helvetica Neue", sans-serif;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* ─── Aurora blobs ─── */
+.nf-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  filter: blur(80px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.nf-blob {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  mix-blend-mode: screen;
+}
+
+.nf-blob-1 {
+  width: 520px;
+  height: 520px;
+  top: -120px;
+  left: -120px;
+  background: radial-gradient(circle, #6ee7b7 0%, transparent 65%);
+  animation: nfDrift1 18s ease-in-out infinite;
+}
+
+.nf-blob-2 {
+  width: 560px;
+  height: 560px;
+  bottom: -160px;
+  right: -140px;
+  background: radial-gradient(circle, #3b82f6 0%, transparent 65%);
+  animation: nfDrift2 22s ease-in-out infinite;
+}
+
+.nf-blob-3 {
+  width: 420px;
+  height: 420px;
+  top: 40%;
+  left: 55%;
+  background: radial-gradient(circle, #a855f7 0%, transparent 65%);
+  animation: nfDrift3 26s ease-in-out infinite;
+}
+
+@keyframes nfDrift1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(60px, 40px) scale(1.1); }
+}
+@keyframes nfDrift2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-50px, -30px) scale(1.08); }
+}
+@keyframes nfDrift3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-40px, 50px) scale(1.15); }
+}
+
+/* ─── Grain overlay ─── */
+.nf-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.6) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+
+/* ─── Main ─── */
+.nf-main {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+}
+
+.nf-card {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  padding: 3.5rem 2.5rem;
+  text-align: center;
+  background: rgba(15, 17, 23, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow:
+    0 40px 80px -20px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  animation: nfRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes nfRise {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Pill ─── */
+.nf-pill {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6ee7b7;
+  background: rgba(110, 231, 183, 0.08);
+  border: 1px solid rgba(110, 231, 183, 0.22);
+  margin-bottom: 1.5rem;
+}
+
+/* ─── 404 numerals ─── */
+.nf-error-code {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05em;
+  font-family: "Inter", sans-serif;
+  font-size: clamp(6rem, 16vw, 10rem);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  margin: 0 0 1.5rem;
+  background: linear-gradient(135deg, #6ee7b7 0%, #10b981 45%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  filter: drop-shadow(0 0 40px rgba(16, 185, 129, 0.35));
+  animation: nfFloat 5s ease-in-out infinite;
+}
+
+/* Animated "0" — a spinning ring inside the zero */
+.nf-zero {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 0.72em;
+  height: 0.85em;
+  background: linear-gradient(135deg, #6ee7b7 0%, #10b981 45%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.nf-zero::before {
+  content: "";
+  position: absolute;
+  inset: 0.08em 0.05em;
+  border-radius: 50%;
+  border: 0.06em solid transparent;
+  background:
+    conic-gradient(from 0deg, #6ee7b7, #3b82f6, #a855f7, #6ee7b7)
+      border-box;
+  -webkit-mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: nfSpin 3.5s linear infinite;
+  opacity: 0.9;
+}
+
+@keyframes nfSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes nfFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+
+/* ─── Title ─── */
+.nf-title {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0 0 0.75rem;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+/* ─── Description ─── */
+.nf-desc {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #a1a1aa;
+  margin: 0 auto 2.5rem;
+  max-width: 460px;
+}
+
+/* ─── Buttons ─── */
+.nf-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.nf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 26px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  border-radius: 999px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.25s ease, background 0.25s ease,
+              border-color 0.25s ease, color 0.25s ease;
+  min-width: 150px;
+}
+
+.nf-btn:active { transform: translateY(1px) scale(0.98); }
+.nf-btn svg { flex-shrink: 0; }
+
+.nf-btn-primary {
+  color: #05060a;
+  background: linear-gradient(135deg, #6ee7b7 0%, #10b981 55%, #059669 100%);
+  box-shadow:
+    0 10px 30px rgba(16, 185, 129, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.nf-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 16px 40px rgba(16, 185, 129, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.nf-btn-ghost {
+  color: #f5f5f7;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.nf-btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+/* ─── Footer ─── */
+.nf-footer {
+  position: relative;
+  z-index: 2;
+  padding: 1.5rem 2rem;
+  text-align: center;
+  font-size: 0.78rem;
+  color: #6b7280;
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.nf-footer-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
+  animation: nfPulse 2s ease-in-out infinite;
+}
+
+@keyframes nfPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.6; transform: scale(0.85); }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .nf-card {
+    padding: 2.5rem 1.5rem;
+    border-radius: 22px;
+  }
+  .nf-desc { font-size: 0.95rem; }
+  .nf-buttons { flex-direction: column; }
+  .nf-btn { width: 100%; min-width: 0; }
+  .nf-blob-1, .nf-blob-2, .nf-blob-3 {
+    filter: blur(60px);
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 400px) {
+  .nf-error-code { letter-spacing: -0.08em; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ACCESSIBILITY
+   ═══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .nf-error-code,
+  .nf-zero::before,
+  .nf-blob-1, .nf-blob-2, .nf-blob-3,
+  .nf-footer-dot {
+    animation: none !important;
+  }
+  .nf-card { animation-duration: 0.01ms !important; }
+}
+
+.nf-btn:focus-visible {
+  outline: 2px solid #6ee7b7;
+  outline-offset: 3px;
+}
