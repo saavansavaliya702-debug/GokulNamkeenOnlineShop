@@ -136,7 +136,7 @@ const AddNamkeenProduct = () => {
 
       const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:7070/api/admin/products", {
+      const res = await fetch("https://gokulnamkeenonlineshop-backend.onrender.com/api/admin/products", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
