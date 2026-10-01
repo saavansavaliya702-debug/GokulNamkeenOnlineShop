@@ -6,7 +6,7 @@ import UserNavbar from "../Navbar/UserNavbar";
 import { getImageUrl } from "../utils/image";
 import "../Css/payment.css";
 
-const API = "http://localhost:7070/api";
+const API = "https://gokulnamkeenonlineshop-backend.onrender.com/api";
 const RAZORPAY_SCRIPT = "https://checkout.razorpay.com/v1/checkout.js";
 
 /* ------------------------------------------------------------------ */
