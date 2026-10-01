@@ -7,7 +7,7 @@ import AdminNavbar from "../Navbar/AdminNavbar";
 import { useAuth } from "./AuthContext";
 import "../Css/AdminCustomerPage.css";
 
-const API = "http://localhost:7070/api/admin";
+const API = "https://gokulnamkeenonlineshop-backend.onrender.com/api/admin";
 
 const getErrMsg = (err) =>
   err?.response?.data?.error || err?.message || "Unknown error";
