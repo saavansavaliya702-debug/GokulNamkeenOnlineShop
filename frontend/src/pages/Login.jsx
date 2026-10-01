@@ -6,7 +6,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "../pages/AuthContext";
 import "../Css/login.css";
 
-const API = "http://localhost:7070/api/auth";
+const API = "https://gokulnamkeenonlineshop-backend.onrender.com/api/auth";
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
