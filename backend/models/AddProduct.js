@@ -23,6 +23,14 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 0,
       },
+
+      // ⭐ NEW: low-stock alert threshold
+      low_stock_alert: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 5,
+      },
+
       category: {
         type: DataTypes.STRING,
         allowNull: true,
@@ -37,14 +45,11 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: "g",
       },
-
-      // ⭐ NEW: pieces count
       pcs: {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 0,
       },
-
       variants: {
         type: DataTypes.JSON,
         allowNull: false,

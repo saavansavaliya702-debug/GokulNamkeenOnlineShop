@@ -1,0 +1,327 @@
+/* src/Css/AdminCompanyInfo.css */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+:root {
+  --aci-primary: #16a34a;
+  --aci-primary-dark: #15803d;
+  --aci-primary-soft: #dcfce7;
+  --aci-primary-glow: rgba(22, 163, 74, 0.18);
+  --aci-bg: #f6f8fb;
+  --aci-text: #0f172a;
+  --aci-muted: #64748b;
+  --aci-border: #e8edf3;
+  --aci-radius: 16px;
+  --aci-danger: #dc2626;
+  --aci-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.aci-page {
+  min-height: 100vh;
+  background: var(--aci-bg);
+  padding: 28px 16px 60px;
+  color: var(--aci-text);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.aci-container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.aci-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+
+.aci-back {
+  background: white;
+  border: 1.5px solid var(--aci-border);
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.aci-back:hover {
+  background: var(--aci-primary-soft);
+  border-color: var(--aci-primary);
+  color: var(--aci-primary-dark);
+}
+
+.aci-header-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+}
+
+.aci-header-icon {
+  width: 54px;
+  height: 54px;
+  background: linear-gradient(135deg, #ffffff, #f1f5f9);
+  border: 1px solid var(--aci-border);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: var(--aci-shadow-sm);
+}
+
+.aci-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--aci-primary-dark);
+  background: var(--aci-primary-soft);
+  padding: 3px 9px;
+  border-radius: 999px;
+  margin-bottom: 6px;
+}
+
+.aci-header h1 {
+  margin: 0 0 3px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.aci-header p {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--aci-muted);
+}
+
+.aci-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.aci-section {
+  background: white;
+  border: 1px solid var(--aci-border);
+  border-radius: var(--aci-radius);
+  padding: 22px 24px;
+  box-shadow: var(--aci-shadow-sm);
+}
+
+.aci-section-title {
+  margin: 0 0 18px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--aci-border);
+}
+
+.aci-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.aci-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.aci-field:last-child {
+  margin-bottom: 0;
+}
+
+.aci-field label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--aci-text);
+}
+
+.aci-field input,
+.aci-field textarea {
+  padding: 11px 14px;
+  border: 1.5px solid var(--aci-border);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: white;
+  outline: none;
+  transition: all 0.2s;
+  color: var(--aci-text);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.aci-field input:focus,
+.aci-field textarea:focus {
+  border-color: var(--aci-primary);
+  box-shadow: 0 0 0 4px var(--aci-primary-glow);
+}
+
+.aci-field textarea {
+  resize: vertical;
+  min-height: 70px;
+}
+
+.aci-array-field {
+  gap: 10px;
+}
+
+.aci-array-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aci-array-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.aci-array-row input {
+  flex: 1;
+}
+
+.aci-array-remove {
+  background: #fef2f2;
+  color: var(--aci-danger);
+  border: 1px solid transparent;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.aci-array-remove:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+}
+
+.aci-array-add {
+  align-self: flex-start;
+  background: white;
+  color: var(--aci-primary-dark);
+  border: 1.5px dashed #86efac;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.aci-array-add:hover {
+  background: var(--aci-primary-soft);
+  border-style: solid;
+}
+
+.aci-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 8px 0 24px;
+}
+
+.aci-btn {
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aci-btn-primary {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: white;
+  box-shadow: 0 6px 16px var(--aci-primary-glow);
+}
+
+.aci-btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(22, 163, 74, 0.28);
+}
+
+.aci-btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.aci-btn-secondary {
+  background: white;
+  border-color: var(--aci-border);
+  color: var(--aci-text);
+}
+
+.aci-btn-secondary:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.aci-btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: aci-spin 0.7s linear infinite;
+}
+
+@keyframes aci-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.aci-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100px 20px;
+  gap: 12px;
+  color: var(--aci-muted);
+}
+
+.aci-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--aci-border);
+  border-top-color: var(--aci-primary);
+  border-radius: 50%;
+  animation: aci-spin 0.7s linear infinite;
+}
+
+@media (max-width: 600px) {
+  .aci-section {
+    padding: 18px 16px;
+  }
+  .aci-actions {
+    flex-direction: column-reverse;
+  }
+  .aci-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

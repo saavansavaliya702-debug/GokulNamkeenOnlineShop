@@ -20,14 +20,10 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Guard: only admins
   useEffect(() => {
-    if (user && !user.is_admin) {
-      navigate("/", { replace: true });
-    }
+    if (user && !user.is_admin) navigate("/", { replace: true });
   }, [user, navigate]);
 
-  // Helper: safely unwrap arrays from various response shapes
   const asArray = (val) => {
     if (Array.isArray(val)) return val;
     if (val?.data?.products && Array.isArray(val.data.products))
@@ -39,7 +35,6 @@ const AdminDashboard = () => {
     return [];
   };
 
-  // Helper: compute total stock from a product (variants-aware)
   const computeStock = (p) => {
     if (Array.isArray(p.variants) && p.variants.length > 0) {
       return p.variants.reduce((s, v) => s + (Number(v.stock) || 0), 0);
@@ -48,63 +43,53 @@ const AdminDashboard = () => {
   };
 
   const fetchAll = useCallback(async (isRefresh = false) => {
+    if (!user) return;
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
 
     const results = await Promise.allSettled([
       api.get("/admin/dashboard/stats"),
       api.get("/admin/dashboard/recent-orders"),
-      api.get("/admin/dashboard/low-stock"),
+      api.get("/products/low-stock"),
       api.get("/admin/dashboard/revenue-chart"),
       api.get("/admin/dashboard/top-products"),
     ]);
 
     const [statsRes, ordersRes, stockRes, revenueRes, topRes] = results;
 
-    if (statsRes.status === "fulfilled") {
-      setStats(statsRes.value.data);
-    } else {
-      console.error("stats failed:", statsRes.reason);
-    }
+    if (statsRes.status === "fulfilled") setStats(statsRes.value.data);
+    else console.error("stats failed:", statsRes.reason);
 
-    if (ordersRes.status === "fulfilled") {
+    if (ordersRes.status === "fulfilled")
       setRecentOrders(asArray(ordersRes.value.data));
-    } else {
-      console.error("orders failed:", ordersRes.reason);
-    }
+    else console.error("orders failed:", ordersRes.reason);
 
-    if (revenueRes.status === "fulfilled") {
+    if (revenueRes.status === "fulfilled")
       setRevenueData(asArray(revenueRes.value.data));
-    } else {
-      console.error("revenue failed:", revenueRes.reason);
-    }
+    else console.error("revenue failed:", revenueRes.reason);
 
-    if (topRes.status === "fulfilled") {
+    if (topRes.status === "fulfilled")
       setTopProducts(asArray(topRes.value.data));
-    } else {
-      console.error("top-products failed:", topRes.reason);
-    }
+    else console.error("top-products failed:", topRes.reason);
 
-    // -------- Low stock with fallback --------
     let lowStockList = [];
-
     if (stockRes.status === "fulfilled") {
-      const raw = stockRes.value.data;
-      console.log("low-stock raw response:", raw);
-      lowStockList = asArray(raw);
+      lowStockList = asArray(stockRes.value.data);
     } else {
       console.error("low-stock failed:", stockRes.reason);
     }
 
-    // If backend returned nothing, compute client-side from /products
     if (lowStockList.length === 0) {
       try {
         const { data: allProducts } = await api.get("/products?all=true");
         const products = asArray(allProducts);
-
         lowStockList = products
-          .map((p) => ({ ...p, _stock: computeStock(p) }))
-          .filter((p) => p._stock > 0 && p._stock <= 10)
+          .map((p) => ({
+            ...p,
+            _stock: computeStock(p),
+            _alert: Number(p.low_stock_alert ?? 5),
+          }))
+          .filter((p) => p._stock > 0 && p._stock <= p._alert)
           .map((p) => ({
             id: p.id,
             name: p.name,
@@ -112,21 +97,18 @@ const AdminDashboard = () => {
             image: p.image,
             price: p.price,
             stock_quantity: p._stock,
+            low_stock_alert: p._alert,
           }));
-
-        console.log("computed low stock from /products:", lowStockList);
       } catch (e) {
-        console.error("fallback low-stock computation failed:", e);
+        console.error("fallback low-stock failed:", e);
       }
     }
 
-    // Normalize fields so the render never breaks on renamed keys
     const normalizedLowStock = lowStockList.map((p) => {
       const variants = Array.isArray(p.variants) ? p.variants : [];
       const totalStock = variants.length
         ? variants.reduce((s, v) => s + (Number(v.stock) || 0), 0)
         : Number(p.stock_quantity ?? p.stock ?? p._stock ?? 0);
-
       return {
         id: p.id ?? p._id,
         name: p.name ?? p.product_name ?? "Unnamed",
@@ -134,13 +116,14 @@ const AdminDashboard = () => {
         image: p.image ?? p.image_url ?? "",
         price: Number(p.price ?? p.selling_price ?? 0),
         stock_quantity: totalStock,
+        low_stock_alert: Number(p.low_stock_alert ?? 5),
       };
     });
 
     setLowStock(normalizedLowStock);
 
-    const anyFailed = results.some((r) => r.status === "rejected");
-    if (anyFailed) toast.error("Some dashboard data failed to load");
+    if (results.some((r) => r.status === "rejected"))
+      toast.error("Some dashboard data failed to load");
 
     setLoading(false);
     setRefreshing(false);
@@ -156,7 +139,6 @@ const AdminDashboard = () => {
     return () => window.removeEventListener("focus", onFocus);
   }, [fetchAll]);
 
-  // Helpers
   const formatCurrency = (amount) =>
     `₹${Number(amount || 0).toLocaleString("en-IN", {
       minimumFractionDigits: 0,
@@ -189,6 +171,15 @@ const AdminDashboard = () => {
     return map[status] || "badge-pending";
   };
 
+  // ⭐ Navigate to the order detail page
+  const handleOrderClick = (order) => {
+    if (!order?.id) {
+      toast.error("Invalid order");
+      return;
+    }
+    navigate(`/order/${order.id}`);
+  };
+
   const maxRevenue =
     revenueData.length > 0
       ? Math.max(...revenueData.map((d) => Number(d.revenue) || 0))
@@ -214,7 +205,6 @@ const AdminDashboard = () => {
       <Toaster position="top-right" toastOptions={{ duration: 2800 }} />
 
       <div className="dash-page">
-        {/* Header */}
         <header className="dash-header">
           <div className="dash-header-text">
             <h1>
@@ -234,7 +224,6 @@ const AdminDashboard = () => {
           </button>
         </header>
 
-        {/* Stats */}
         <section className="dash-stats">
           <div className="dash-stat-card revenue">
             <div className="dash-stat-icon">💰</div>
@@ -283,12 +272,11 @@ const AdminDashboard = () => {
               <span className="dash-stat-value">
                 {stats?.customers?.total || 0}
               </span>
-              <span className="dash-stat-sub">Registered users</span>
+              <span className="dash-stat-sub">Active users</span>
             </div>
           </div>
         </section>
 
-        {/* Alerts */}
         {(stats?.products?.lowStock > 0 || stats?.products?.outOfStock > 0) && (
           <section className="dash-alerts">
             {stats.products.outOfStock > 0 && (
@@ -324,9 +312,7 @@ const AdminDashboard = () => {
           </section>
         )}
 
-        {/* Main Grid */}
         <div className="dash-grid">
-          {/* Revenue Chart */}
           <div className="dash-card chart-card">
             <div className="dash-card-header">
               <h2>📈 Revenue (Last 7 Days)</h2>
@@ -367,7 +353,6 @@ const AdminDashboard = () => {
             )}
           </div>
 
-          {/* Top Products */}
           <div className="dash-card">
             <div className="dash-card-header">
               <h2>🏆 Top Products</h2>
@@ -408,7 +393,7 @@ const AdminDashboard = () => {
             )}
           </div>
 
-          {/* Recent Orders */}
+          {/* ⭐ Recent Orders — clickable rows */}
           <div className="dash-card full">
             <div className="dash-card-header">
               <h2>📋 Recent Orders</h2>
@@ -436,7 +421,20 @@ const AdminDashboard = () => {
                   </thead>
                   <tbody>
                     {recentOrders.map((o) => (
-                      <tr key={o.id}>
+                      <tr
+                        key={o.id}
+                        className="dash-row-clickable"
+                        onClick={() => handleOrderClick(o)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            handleOrderClick(o);
+                          }
+                        }}
+                        title={`View order #${o.id}`}
+                      >
                         <td>
                           <span className="order-id">
                             #{String(o.id).padStart(5, "0")}
@@ -472,7 +470,6 @@ const AdminDashboard = () => {
             )}
           </div>
 
-          {/* Low Stock */}
           <div className="dash-card full">
             <div className="dash-card-header">
               <h2>⚠️ Low Stock Products</h2>
@@ -489,7 +486,7 @@ const AdminDashboard = () => {
                 ✅ All products are well-stocked
                 <br />
                 <small style={{ color: "#94a3b8" }}>
-                  Checked for products with 1–10 units remaining
+                  Checked against each product's low-stock alert threshold
                 </small>
               </div>
             ) : (
@@ -558,7 +555,6 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
         <section className="dash-actions">
           <h2>⚡ Quick Actions</h2>
           <div className="actions-grid">

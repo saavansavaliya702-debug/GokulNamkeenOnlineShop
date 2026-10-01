@@ -1,8 +1,10 @@
 // src/pages/AdminCustomerPage.jsx
 import { useEffect, useState, useCallback, useMemo, Fragment } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import AdminNavbar from "../Navbar/AdminNavbar";
+import { useAuth } from "./AuthContext";
 import "../Css/AdminCustomerPage.css";
 
 const API = "http://localhost:7070/api/admin";
@@ -11,6 +13,9 @@ const getErrMsg = (err) =>
   err?.response?.data?.error || err?.message || "Unknown error";
 
 export default function AdminCustomerPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
   const [users, setUsers] = useState([]);
   const [feedback, setFeedback] = useState([]);
   const [lostUsers, setLostUsers] = useState([]);
@@ -21,6 +26,7 @@ export default function AdminCustomerPage() {
   const [loadingFeedback, setLoadingFeedback] = useState(true);
   const [loadingLost, setLoadingLost] = useState(true);
   const [loadingItems, setLoadingItems] = useState(true);
+
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -29,9 +35,18 @@ export default function AdminCustomerPage() {
   const [itemsSearch, setItemsSearch] = useState("");
   const [expandedUser, setExpandedUser] = useState(null);
 
-  /* Fetch users */
+  /* Admin guard */
   useEffect(() => {
+    if (user && !user.is_admin) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
+
+  /* Users */
+  useEffect(() => {
+    if (!user) return;
     let mounted = true;
+    setLoadingUsers(true);
     axios
       .get(`${API}/users`)
       .then((res) => mounted && setUsers(res.data || []))
@@ -40,42 +55,51 @@ export default function AdminCustomerPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [user]);
 
+  /* Feedback */
   const loadFeedback = useCallback(() => {
+    if (!user) return Promise.resolve();
     setLoadingFeedback(true);
-    axios
+    return axios
       .get(`${API}/feedback`)
       .then((res) => setFeedback(res.data || []))
       .catch((err) => setError(getErrMsg(err)))
       .finally(() => setLoadingFeedback(false));
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     loadFeedback();
   }, [loadFeedback]);
 
-  const loadLostUsers = useCallback((days) => {
-    setLoadingLost(true);
-    axios
-      .get(`${API}/lost-users?days=${days}`)
-      .then((res) => setLostUsers(res.data?.users || []))
-      .catch((err) => setError(getErrMsg(err)))
-      .finally(() => setLoadingLost(false));
-  }, []);
+  /* Lost users */
+  const loadLostUsers = useCallback(
+    (days) => {
+      if (!user) return Promise.resolve();
+      setLoadingLost(true);
+      return axios
+        .get(`${API}/lost-users?days=${days}`)
+        .then((res) => setLostUsers(res.data?.users || []))
+        .catch((err) => setError(getErrMsg(err)))
+        .finally(() => setLoadingLost(false));
+    },
+    [user]
+  );
 
   useEffect(() => {
     loadLostUsers(inactiveDays);
   }, [loadLostUsers, inactiveDays]);
 
+  /* Customer items */
   const loadCustomerItems = useCallback(() => {
+    if (!user) return Promise.resolve();
     setLoadingItems(true);
-    axios
+    return axios
       .get(`${API}/customer-items`)
       .then((res) => setCustomerItems(res.data || []))
       .catch((err) => setError(getErrMsg(err)))
       .finally(() => setLoadingItems(false));
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     loadCustomerItems();
@@ -84,13 +108,18 @@ export default function AdminCustomerPage() {
   const handleRefresh = async () => {
     setRefreshing(true);
     setError(null);
-    await Promise.all([
-      loadFeedback(),
-      loadLostUsers(inactiveDays),
-      loadCustomerItems(),
-    ]);
-    setRefreshing(false);
-    toast.success("Data refreshed");
+    try {
+      await Promise.all([
+        loadFeedback(),
+        loadLostUsers(inactiveDays),
+        loadCustomerItems(),
+      ]);
+      toast.success("Data refreshed");
+    } catch (err) {
+      toast.error("Refresh failed: " + getErrMsg(err));
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleDeleteUser = async (id) => {
@@ -179,7 +208,7 @@ export default function AdminCustomerPage() {
               <div className="acp-header-icon">👥</div>
               <div>
                 <h1>Customer Dashboard</h1>
-                
+                <p>Manage users, feedback and purchases</p>
               </div>
             </div>
             <button
@@ -238,11 +267,7 @@ export default function AdminCustomerPage() {
               { key: "users", label: "Users", count: users.length },
               { key: "feedback", label: "Feedback", count: feedback.length },
               { key: "lost", label: "Lost Users", count: lostUsers.length },
-              {
-                key: "items",
-                label: "Customer Items",
-                count: customerItems.length,
-              },
+             
             ].map((t) => (
               <button
                 key={t.key}
@@ -258,11 +283,16 @@ export default function AdminCustomerPage() {
             ))}
           </div>
 
-          {/* ─── USERS ─── */}
+          {/* USERS */}
           {activeTab === "users" && (
             <section className="acp-card">
               <div className="acp-card-header">
-                <h2>All Users</h2>
+                <h2>
+                  All Users
+                  <span className="section-sub">
+                    {filteredUsers.length} shown
+                  </span>
+                </h2>
                 <div className="acp-search-wrap">
                   <span className="search-icon">🔍</span>
                   <input
@@ -297,54 +327,118 @@ export default function AdminCustomerPage() {
                         <th>Email</th>
                         <th>Verified</th>
                         <th>Orders</th>
+                        <th>Items</th>
+                        <th>Spent</th>
                         <th>Last Order</th>
                         <th>Joined</th>
                         <th></th>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredUsers.map((u) => (
-                        <tr key={u.id}>
-                          <td className="mono">{u.id}</td>
-                          <td>
-                            <div className="name-cell">
-                              <Avatar name={u.name || u.email} />
-                              <strong>{u.name || "—"}</strong>
-                            </div>
-                          </td>
-                          <td className="muted">{u.email}</td>
-                          <td>
-                            <span
-                              className={`dot ${
-                                u.is_verified ? "ok" : "no"
-                              }`}
-                              title={
-                                u.is_verified ? "Verified" : "Unverified"
-                              }
-                            />
-                          </td>
-                          <td>
-                            <span className="badge blue">
-                              {u.order_count ?? 0}
-                            </span>
-                          </td>
-                          <td className="muted">
-                            {u.last_order_at
-                              ? fmt(u.last_order_at)
-                              : "Never"}
-                          </td>
-                          <td className="muted">{fmt(u.createdAt)}</td>
-                          <td>
-                            <button
-                              className="btn-danger"
-                              onClick={() => handleDeleteUser(u.id)}
-                              type="button"
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                      {filteredUsers.map((u) => {
+                        const customerData = customerItems.find(
+                          (c) => c.id === u.id
+                        );
+                        const isOpen = expandedUser === u.id;
+                        const itemsList = customerData?.items || [];
+
+                        return (
+                          <Fragment key={u.id}>
+                            <tr>
+                              <td className="mono">{u.id}</td>
+                              <td>
+                                <div className="name-cell">
+                                  <Avatar name={u.name || u.email} />
+                                  <strong>{u.name || "—"}</strong>
+                                </div>
+                              </td>
+                              <td className="muted">{u.email}</td>
+                              <td>
+                                <span
+                                  className={`dot ${
+                                    u.is_verified ? "ok" : "no"
+                                  }`}
+                                  title={
+                                    u.is_verified ? "Verified" : "Unverified"
+                                  }
+                                />
+                              </td>
+                              <td>
+                                <span className="badge blue">
+                                  {u.order_count ?? 0}
+                                </span>
+                              </td>
+                              <td>
+                                <span className="badge green">
+                                  {customerData?.itemsCount ?? 0}
+                                </span>
+                              </td>
+                              <td className="muted">
+                                ₹
+                                {Number(
+                                  customerData?.amountSpent || 0
+                                ).toLocaleString("en-IN")}
+                              </td>
+                              <td className="muted">
+                                {u.last_order_at
+                                  ? fmt(u.last_order_at)
+                                  : "Never"}
+                              </td>
+                              <td className="muted">{fmt(u.createdAt)}</td>
+                              <td>
+                                <div className="action-btns">
+                                  {itemsList.length > 0 && (
+                                    <button
+                                      className="btn-ghost"
+                                      onClick={() =>
+                                        setExpandedUser(isOpen ? null : u.id)
+                                      }
+                                      type="button"
+                                      title="View items"
+                                    >
+                                      {isOpen ? "▲" : "▼"}
+                                    </button>
+                                  )}
+                                  <button
+                                    className="btn-danger"
+                                    onClick={() => handleDeleteUser(u.id)}
+                                    type="button"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                            {isOpen && itemsList.length > 0 && (
+                              <tr className="expand-row">
+                                <td colSpan={10}>
+                                  <div className="items-panel">
+                                    <h4>🛒 Purchased Items</h4>
+                                    <div className="items-grid">
+                                      {itemsList.map((item, idx) => (
+                                        <div key={idx} className="item-chip">
+                                          <span className="item-name">
+                                            {item.name}
+                                          </span>
+                                          <span className="item-meta">
+                                            Qty: {item.qty} · ₹{item.price}
+                                          </span>
+                                          <span className="item-total">
+                                            Total: ₹
+                                            {Number(
+                                              item.totalSpent || 0
+                                            ).toLocaleString("en-IN")}
+                                          </span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -352,7 +446,7 @@ export default function AdminCustomerPage() {
             </section>
           )}
 
-          {/* ─── FEEDBACK ─── */}
+          {/* FEEDBACK */}
           {activeTab === "feedback" && (
             <section className="acp-card">
               <div className="acp-card-header">
@@ -377,9 +471,7 @@ export default function AdminCustomerPage() {
                         <Avatar name={f.user?.name || f.user?.email} />
                         <div className="feedback-sender">
                           <div className="sender-line">
-                            <strong>
-                              {f.user?.name || "Unknown"}
-                            </strong>
+                            <strong>{f.user?.name || "Unknown"}</strong>
                             {f.user?.is_verified && (
                               <span className="verified-chip">
                                 ✓ Verified
@@ -418,9 +510,7 @@ export default function AdminCustomerPage() {
 
                       <p className="feedback-message">{f.message}</p>
 
-                      <div className="feedback-meta">
-                        🕒 {fmt(f.createdAt)}
-                      </div>
+                      <div className="feedback-meta">🕒 {fmt(f.createdAt)}</div>
                     </li>
                   ))}
                 </ul>
@@ -428,7 +518,7 @@ export default function AdminCustomerPage() {
             </section>
           )}
 
-          {/* ─── LOST USERS ─── */}
+          {/* LOST USERS */}
           {activeTab === "lost" && (
             <section className="acp-card">
               <div className="acp-card-header">
@@ -442,9 +532,7 @@ export default function AdminCustomerPage() {
                   <label>Inactivity:</label>
                   <select
                     value={inactiveDays}
-                    onChange={(e) =>
-                      setInactiveDays(Number(e.target.value))
-                    }
+                    onChange={(e) => setInactiveDays(Number(e.target.value))}
                   >
                     {[7, 14, 30, 60, 90].map((d) => (
                       <option key={d} value={d}>
@@ -520,15 +608,13 @@ export default function AdminCustomerPage() {
             </section>
           )}
 
-          {/* ─── CUSTOMER ITEMS ─── */}
+          {/* CUSTOMER ITEMS */}
           {activeTab === "items" && (
             <section className="acp-card">
               <div className="acp-card-header">
                 <h2>
                   🛒 Customer Items
-                  <span className="section-sub">
-                    items each user bought
-                  </span>
+                  <span className="section-sub">items each user bought</span>
                 </h2>
                 <div className="acp-search-wrap">
                   <span className="search-icon">🔍</span>
@@ -605,9 +691,7 @@ export default function AdminCustomerPage() {
                                 )}
                               </td>
                               <td className="muted">
-                                {u.lastOrderAt
-                                  ? fmt(u.lastOrderAt)
-                                  : "—"}
+                                {u.lastOrderAt ? fmt(u.lastOrderAt) : "—"}
                               </td>
                               <td>
                                 {itemsList.length > 0 ? (
@@ -637,10 +721,7 @@ export default function AdminCustomerPage() {
                                     <h4>Purchased Items</h4>
                                     <div className="items-grid">
                                       {itemsList.map((it, idx) => (
-                                        <div
-                                          className="item-chip"
-                                          key={idx}
-                                        >
+                                        <div className="item-chip" key={idx}>
                                           <span className="item-name">
                                             {it.name}
                                           </span>

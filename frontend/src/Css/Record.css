@@ -695,3 +695,30 @@
 .btn-remove-row:hover {
   background: #fecaca;
 }
+/* Helper text under edit fields */
+.field-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.74rem;
+  color: #94a3b8;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Make edit-meta a 3-column grid to fit the new field */
+.edit-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+/* Optional: highlight the alert field a bit */
+.editor-field input[type="number"] {
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.editor-field input[type="number"]:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.15);
+}

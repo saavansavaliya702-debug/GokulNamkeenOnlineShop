@@ -1,37 +1,12 @@
 // src/pages/Contact.jsx
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import api from "../utils/api";
 import UserNavbar from "../Navbar/UserNavbar";
 import AdminNavbar from "../Navbar/AdminNavbar";
 import { useAuth } from "./AuthContext";
-import { COMPANY_INFO } from "../config/companyInfo";
 import "../Css/contact.css";
-
-const PARTNERS = {
-  investors: [
-    "Sequoia Capital India",
-    "Premji Invest",
-    "SoftBank Vision Fund",
-    "Temasek Holdings",
-    "Multiple Family Offices",
-  ],
-  business: [
-    "Reliance Retail",
-    "Amazon India & Global",
-    "Flipkart",
-    "BigBasket",
-    "Walmart India",
-  ],
-  international: [
-    "Costco (USA & Canada)",
-    "Tesco (UK)",
-    "Carrefour (Middle East)",
-    "NTUC FairPrice (Singapore)",
-    "Woolworths (Australia)",
-  ],
-};
 
 const MFG_CARDS = [
   {
@@ -72,7 +47,22 @@ const Contact = () => {
   const [success, setSuccess] = useState(false);
   const [lastSubmitTime, setLastSubmitTime] = useState(0);
 
+  const [company, setCompany] = useState(null);
+  const [loadingCompany, setLoadingCompany] = useState(true);
+
   const SUBMIT_COOLDOWN = 3000;
+
+  useEffect(() => {
+    let mounted = true;
+    api
+      .get("/company-info")
+      .then(({ data }) => mounted && setCompany(data))
+      .catch(() => mounted && setCompany(null))
+      .finally(() => mounted && setLoadingCompany(false));
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -195,88 +185,110 @@ const Contact = () => {
               <div className="contact-info">
                 <h2>Company Details</h2>
 
-                <div className="info-list">
-                  <div className="info-item">
-                    <span className="info-icon">🏢</span>
-                    <div>
-                      <h4>Company Name</h4>
-                      <p>{COMPANY_INFO.name}</p>
+                {loadingCompany ? (
+                  <p className="info-loading">Loading company details…</p>
+                ) : !company ? (
+                  <p className="info-loading">
+                    Company details are not available.
+                  </p>
+                ) : (
+                  <div className="info-list">
+                    <div className="info-item">
+                      <span className="info-icon">🏢</span>
+                      <div>
+                        <h4>Company Name</h4>
+                        <p>{company.name}</p>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="info-item">
-                    <span className="info-icon">👤</span>
-                    <div>
-                      <h4>Founder & Owner</h4>
-                      <p>{COMPANY_INFO.founder}</p>
-                    </div>
-                  </div>
+                    {company.founder && (
+                      <div className="info-item">
+                        <span className="info-icon">👤</span>
+                        <div>
+                          <h4>Founder & Owner</h4>
+                          <p>{company.founder}</p>
+                        </div>
+                      </div>
+                    )}
 
-                  <div className="info-item">
-                    <span className="info-icon">🏭</span>
-                    <div>
-                      <h4>Manufacturing Units</h4>
-                      <p>
-                        {COMPANY_INFO.units.map((unit, idx) => (
-                          <span key={idx}>
-                            • {unit}
-                            {idx < COMPANY_INFO.units.length - 1 && <br />}
-                          </span>
-                        ))}
-                      </p>
-                    </div>
-                  </div>
+                    {company.units?.length > 0 && (
+                      <div className="info-item">
+                        <span className="info-icon">🏭</span>
+                        <div>
+                          <h4>Manufacturing Units</h4>
+                          <p>
+                            {company.units.map((unit, idx) => (
+                              <span key={idx}>
+                                • {unit}
+                                {idx < company.units.length - 1 && <br />}
+                              </span>
+                            ))}
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
-                  <div className="info-item">
-                    <span className="info-icon">📍</span>
-                    <div>
-                      <h4>Registered Address</h4>
-                      <p>
-                        {COMPANY_INFO.address.street}
-                        <br />
-                        {COMPANY_INFO.address.city}
-                        <br />
-                        {COMPANY_INFO.address.state}
-                      </p>
-                    </div>
-                  </div>
+                    {(company.address_street ||
+                      company.address_city ||
+                      company.address_state) && (
+                      <div className="info-item">
+                        <span className="info-icon">📍</span>
+                        <div>
+                          <h4>Registered Address</h4>
+                          <p>
+                            {company.address_street}
+                            {company.address_street && <br />}
+                            {company.address_city}
+                            {company.address_city && <br />}
+                            {company.address_state}
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
-                  <div className="info-item">
-                    <span className="info-icon">📞</span>
-                    <div>
-                      <h4>Phone</h4>
-                      <p>{COMPANY_INFO.contact.phone.join(" | ")}</p>
-                    </div>
-                  </div>
+                    {company.phones?.length > 0 && (
+                      <div className="info-item">
+                        <span className="info-icon">📞</span>
+                        <div>
+                          <h4>Phone</h4>
+                          <p>{company.phones.join(" | ")}</p>
+                        </div>
+                      </div>
+                    )}
 
-                  <div className="info-item">
-                    <span className="info-icon">✉️</span>
-                    <div>
-                      <h4>Email</h4>
-                      {COMPANY_INFO.contact.email.map((mail, idx) => (
-                        <p key={idx}>
-                          <a href={`mailto:${mail}`}>{mail}</a>
-                        </p>
-                      ))}
-                    </div>
-                  </div>
+                    {company.emails?.length > 0 && (
+                      <div className="info-item">
+                        <span className="info-icon">✉️</span>
+                        <div>
+                          <h4>Email</h4>
+                          {company.emails.map((mail, idx) => (
+                            <p key={idx}>
+                              <a href={`mailto:${mail}`}>{mail}</a>
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
-                  <div className="info-item">
-                    <span className="info-icon">🌐</span>
-                    <div>
-                      <h4>Website</h4>
-                      <p>
-                        <a
-                          href={COMPANY_INFO.contact.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {COMPANY_INFO.contact.website}
-                        </a>
-                      </p>
-                    </div>
+                    {company.website && (
+                      <div className="info-item">
+                        <span className="info-icon">🌐</span>
+                        <div>
+                          <h4>Website</h4>
+                          <p>
+                            <a
+                              href={company.website}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {company.website}
+                            </a>
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Form */}
@@ -289,7 +301,11 @@ const Contact = () => {
                   </div>
                 )}
 
-                <form className="contact-form" onSubmit={handleSubmit} noValidate>
+                <form
+                  className="contact-form"
+                  onSubmit={handleSubmit}
+                  noValidate
+                >
                   <div className="form-group">
                     <label htmlFor="fullName">
                       Full Name <span className="req">*</span>
@@ -334,7 +350,9 @@ const Contact = () => {
                         type="tel"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        onFocus={() => setErrors((e) => ({ ...e, phone: "" }))}
+                        onFocus={() =>
+                          setErrors((e) => ({ ...e, phone: "" }))
+                        }
                         placeholder="Optional"
                         className={errors.phone ? "has-error" : ""}
                       />
@@ -364,7 +382,9 @@ const Contact = () => {
                       rows={5}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      onFocus={() => setErrors((e) => ({ ...e, message: "" }))}
+                      onFocus={() =>
+                        setErrors((e) => ({ ...e, message: "" }))
+                      }
                       placeholder="Write your message… (minimum 10 characters)"
                       className={errors.message ? "has-error" : ""}
                     />
@@ -394,43 +414,55 @@ const Contact = () => {
         </section>
 
         {/* Partners */}
-        <section className="contact-partners">
-          <div className="contact-container">
-            <header className="section-head">
-              <span className="section-tag">Partners</span>
-              <h2>
-                Our Investors & <span className="highlight">Strategic Partners</span>
-              </h2>
-            </header>
+        {company &&
+          (company.investors?.length > 0 ||
+            company.business_partners?.length > 0 ||
+            company.international_partners?.length > 0) && (
+            <section className="contact-partners">
+              <div className="contact-container">
+                <header className="section-head">
+                  <span className="section-tag">Partners</span>
+                  <h2>
+                    Our Investors &{" "}
+                    <span className="highlight">Strategic Partners</span>
+                  </h2>
+                </header>
 
-            <div className="partners-grid">
-              <div className="partner-card">
-                <h3>Major Investors</h3>
-                <ul>
-                  {PARTNERS.investors.map((p) => (
-                    <li key={p}>{p}</li>
-                  ))}
-                </ul>
+                <div className="partners-grid">
+                  {company.investors?.length > 0 && (
+                    <div className="partner-card">
+                      <h3>Major Investors</h3>
+                      <ul>
+                        {company.investors.map((p) => (
+                          <li key={p}>{p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {company.business_partners?.length > 0 && (
+                    <div className="partner-card">
+                      <h3>Key Business Partners</h3>
+                      <ul>
+                        {company.business_partners.map((p) => (
+                          <li key={p}>{p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {company.international_partners?.length > 0 && (
+                    <div className="partner-card">
+                      <h3>International Partners</h3>
+                      <ul>
+                        {company.international_partners.map((p) => (
+                          <li key={p}>{p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="partner-card">
-                <h3>Key Business Partners</h3>
-                <ul>
-                  {PARTNERS.business.map((p) => (
-                    <li key={p}>{p}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="partner-card">
-                <h3>International Partners</h3>
-                <ul>
-                  {PARTNERS.international.map((p) => (
-                    <li key={p}>{p}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
+            </section>
+          )}
 
         {/* Manufacturing */}
         <section className="contact-mfg">
@@ -464,11 +496,7 @@ const Contact = () => {
               Whether you are a distributor, retailer, or customer — we are
               always happy to hear from you.
             </p>
-            <button
-              className="cta-btn"
-              onClick={handleCTAClick}
-              type="button"
-            >
+            <button className="cta-btn" onClick={handleCTAClick} type="button">
               Get in Touch
             </button>
           </div>

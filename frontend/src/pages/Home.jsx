@@ -7,7 +7,7 @@ import AdminNavbar from "../Navbar/AdminNavbar";
 import UserNavbar from "../Navbar/UserNavbar";
 import { useAuth } from "./AuthContext";
 import Loading from "./Loading";
-import { getImageUrl } from "../utils/image"; // if you have this helper
+import { getImageUrl } from "../utils/image";
 
 /* ─── Static content ─── */
 const FEATURES = [
@@ -58,50 +58,33 @@ const TESTIMONIALS = [
   },
 ];
 
-const CONTACT_CARDS = [
-  {
-    icon: "📍",
-    title: "Visit Us",
-    lines: ["Mota Varachha", "Surat, Gujarat 395001"],
-    action: {
-      label: "Get Directions →",
-      href: "https://maps.google.com/?q=Mota+Varachha+Surat",
-    },
-  },
-  {
-    icon: "📞",
-    title: "Call Us",
-    lines: ["+91 98765 43210", "+91 97731 41783"],
-    links: ["tel:+919876543210", "tel:+919773141783"],
-    action: { label: "Call Now →", href: "tel:+919876543210" },
-  },
-  {
-    icon: "📧",
-    title: "Email Us",
-    lines: ["info@gokulnamkeen.com", "saavansavaliya702@gmail.com"],
-    links: [
-      "mailto:info@gokulnamkeen.com",
-      "mailto:saavansavaliya702@gmail.com",
-    ],
-    action: { label: "Send Email →", href: "mailto:info@gokulnamkeen.com" },
-  },
-];
-
 const Home = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [company, setCompany] = useState(null);
 
+  /* ─── Fetch products ─── */
   useEffect(() => {
     setProductsLoading(true);
     api
       .get("/products?limit=6")
       .then(({ data }) => setProducts(Array.isArray(data) ? data : []))
       .catch((err) =>
-        console.error("products fetch:", err.response?.status, err.message),
+        console.error("products fetch:", err.response?.status, err.message)
       )
       .finally(() => setProductsLoading(false));
+  }, []);
+
+  /* ─── Fetch company info ─── */
+  useEffect(() => {
+    api
+      .get("/company-info")
+      .then(({ data }) => setCompany(data))
+      .catch((err) =>
+        console.error("company info fetch:", err.response?.status, err.message)
+      );
   }, []);
 
   if (loading) return <Loading />;
@@ -110,11 +93,68 @@ const Home = () => {
   const goToProduct = (id) => navigate(`/product/${id}`);
   const formatPrice = (n) => Number(n || 0).toLocaleString("en-IN");
 
+  /* ─── Derived company data ─── */
+  const companyName = company?.name || "Gokul Namkeen";
+  const companyFounder = company?.founder || "";
+  const companyTagline = company?.tagline || "Authentic since 2004";
+  const companyDescription = company?.description || "";
+
+  const primaryPhone = company?.phones?.[0] || "";
+  const primaryEmail = company?.emails?.[0] || "";
+  const website = company?.website || "";
+  const address = company?.address_street
+    ? [
+        company.address_street,
+        company.address_city,
+        company.address_state,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    : "";
+
+  /* ─── Contact cards (dynamic) ─── */
+  const CONTACT_CARDS = [
+    {
+      icon: "📍",
+      title: "Visit Us",
+      lines: company
+        ? [
+            company.address_street || "—",
+            [company.address_city, company.address_state]
+              .filter(Boolean)
+              .join(", "),
+          ].filter(Boolean)
+        : ["Mota Varachha", "Surat, Gujarat 395001"],
+      action: {
+        label: "Get Directions →",
+        href: `https://maps.google.com/?q=${encodeURIComponent(
+          address || "Mota Varachha Surat"
+        )}`,
+      },
+    },
+    {
+      icon: "📞",
+      title: "Call Us",
+      lines: company?.phones?.length ? company.phones : ["—"],
+      links: company?.phones?.map((p) => `tel:${p.replace(/\s+/g, "")}`) || [],
+      action: primaryPhone
+        ? { label: "Call Now →", href: `tel:${primaryPhone.replace(/\s+/g, "")}` }
+        : { label: "Call Now →", href: "#" },
+    },
+    {
+      icon: "📧",
+      title: "Email Us",
+      lines: company?.emails?.length ? company.emails : ["—"],
+      links: company?.emails?.map((e) => `mailto:${e}`) || [],
+      action: primaryEmail
+        ? { label: "Send Email →", href: `mailto:${primaryEmail}` }
+        : { label: "Send Email →", href: "#" },
+    },
+  ];
+
   return (
     <>
-      {user?.is_admin ?
-        <AdminNavbar />
-      : <UserNavbar />}
+      {user?.is_admin ? <AdminNavbar /> : <UserNavbar />}
 
       <main className='home-container'>
         {/* ─── HERO ─── */}
@@ -123,15 +163,15 @@ const Home = () => {
           <div className='hero-inner'>
             <div className='hero-content'>
               <span className='hero-eyebrow'>
-                <span className='hero-eyebrow-dot' /> Authentic since 2004
+                <span className='hero-eyebrow-dot' /> {companyTagline}
               </span>
               <h1>
                 Welcome to{" "}
-                <span className='brand-highlight'>Gokul Namkeen</span>
+                <span className='brand-highlight'>{companyName}</span>
               </h1>
               <p className='hero-subtitle'>
-                Taste the tradition. Enjoy the pure, authentic flavor of
-                handcrafted namkeen made with love and the finest ingredients.
+                {companyDescription ||
+                  "Taste the tradition. Enjoy the pure, authentic flavor of handcrafted namkeen made with love and the finest ingredients."}
               </p>
               <div className='hero-actions'>
                 <button className='btn btn-primary' onClick={goToProducts}>
@@ -152,7 +192,7 @@ const Home = () => {
               <div className='hero-image'>
                 <img
                   src='/images.jpg'
-                  alt='Gokul Namkeen assortment'
+                  alt={`${companyName} assortment`}
                   loading='eager'
                 />
               </div>
@@ -164,7 +204,7 @@ const Home = () => {
           </div>
         </section>
 
-        {/* ─── WELCOME (logged-in) ─── */}
+        {/* ─── WELCOME ─── */}
         {user && (
           <section className='welcome-section'>
             <div className='welcome-card'>
@@ -206,7 +246,7 @@ const Home = () => {
               Why <span className='title-highlight'>Choose Us?</span>
             </h2>
             <p className='section-sub'>
-              Four reasons families across Gujarat trust Gokul Namkeen every
+              Four reasons families across Gujarat trust {companyName} every
               day.
             </p>
           </header>
@@ -223,7 +263,6 @@ const Home = () => {
           </div>
         </section>
 
-        {/* ─── PRODUCTS ─── */}
         {/* ─── PRODUCTS ─── */}
         <section id='products' className='products'>
           <header className='section-head'>
@@ -246,12 +285,12 @@ const Home = () => {
             )}
           </header>
 
-          {productsLoading ?
+          {productsLoading ? (
             <div className='products-loading'>
               <div className='products-spinner' />
               <p>Loading delicious products...</p>
             </div>
-          : products.length === 0 ?
+          ) : products.length === 0 ? (
             <div className='products-empty'>
               <span className='empty-emoji'>🥨</span>
               <h3>No products yet</h3>
@@ -263,14 +302,17 @@ const Home = () => {
                 Browse All Products
               </button>
             </div>
-          : <>
+          ) : (
+            <>
               <div className='products-grid product-page-style'>
                 {products.slice(0, 8).map((p) => {
                   const outOfStock = p.stock === 0;
                   return (
                     <article
                       key={p.id}
-                      className={`product-card ${outOfStock ? "out-of-stock" : ""}`}>
+                      className={`product-card ${
+                        outOfStock ? "out-of-stock" : ""
+                      }`}>
                       <div
                         className='product-clickable'
                         onClick={() => goToProduct(p.id)}
@@ -283,12 +325,12 @@ const Home = () => {
                           }
                         }}>
                         <div className='product-image'>
-                          {p.image ?
+                          {p.image ? (
                             <img
                               src={
-                                typeof getImageUrl === "function" ?
-                                  getImageUrl(p.image)
-                                : p.image
+                                typeof getImageUrl === "function"
+                                  ? getImageUrl(p.image)
+                                  : p.image
                               }
                               alt={p.name}
                               loading='lazy'
@@ -296,7 +338,9 @@ const Home = () => {
                                 e.currentTarget.style.display = "none";
                               }}
                             />
-                          : <span className='product-fallback'>🌾</span>}
+                          ) : (
+                            <span className='product-fallback'>🌾</span>
+                          )}
 
                           {outOfStock && (
                             <span className='product-badge out'>
@@ -364,7 +408,7 @@ const Home = () => {
                 </div>
               )}
             </>
-          }
+          )}
         </section>
 
         {/* ─── TESTIMONIALS ─── */}
@@ -375,7 +419,7 @@ const Home = () => {
               What Our Customers <span className='title-highlight'>Say</span>
             </h2>
             <p className='section-sub'>
-              Real stories from families who love Gokul Namkeen.
+              Real stories from families who love {companyName}.
             </p>
           </header>
           <div className='testimonials-grid'>
@@ -399,21 +443,26 @@ const Home = () => {
           <header className='section-head'>
             <span className='section-tag'>Our Story</span>
             <h2>
-              About Gokul <span className='title-highlight'>Namkeen</span>
+              About <span className='title-highlight'>{companyName}</span>
             </h2>
           </header>
           <div className='about-content'>
             <div className='about-text'>
               <p className='about-lead'>
-                With over 20 years of experience, Gokul Namkeen has been serving
-                authentic traditional snacks and sweets to families across the
-                region.
+                {companyDescription ||
+                  `With over 20 years of experience, ${companyName} has been serving authentic traditional snacks and sweets to families across the region.`}
               </p>
               <p>
                 Our commitment to quality, taste, and tradition has made us a
                 trusted name in every household. We use only the finest
-                ingredients and follow time-tested recipes that have been passed
-                down through generations.
+                ingredients and follow time-tested recipes that have been
+                passed down through generations.
+                {companyFounder && (
+                  <>
+                    {" "}
+                    Founded and led by <strong>{companyFounder}</strong>.
+                  </>
+                )}
               </p>
               <ul className='about-list'>
                 <li>
@@ -436,7 +485,11 @@ const Home = () => {
               </button>
             </div>
             <div className='about-image'>
-              <img src='/images.jpg' alt='About Gokul Namkeen' loading='lazy' />
+              <img
+                src='/images.jpg'
+                alt={`About ${companyName}`}
+                loading='lazy'
+              />
               <div className='about-image-overlay'>
                 <span>Est. 2004</span>
               </div>
@@ -465,12 +518,14 @@ const Home = () => {
                 <h3>{c.title}</h3>
                 <p>
                   {c.lines.map((line, i) => (
-                    <span key={line}>
-                      {c.links?.[i] ?
+                    <span key={`${c.title}-${i}`}>
+                      {c.links?.[i] ? (
                         <a href={c.links[i]} className='contact-link'>
                           {line}
                         </a>
-                      : line}
+                      ) : (
+                        line
+                      )}
                       {i < c.lines.length - 1 && <br />}
                     </span>
                   ))}
@@ -482,9 +537,9 @@ const Home = () => {
                     c.action.href.startsWith("http") ? "_blank" : undefined
                   }
                   rel={
-                    c.action.href.startsWith("http") ?
-                      "noopener noreferrer"
-                    : undefined
+                    c.action.href.startsWith("http")
+                      ? "noopener noreferrer"
+                      : undefined
                   }>
                   {c.action.label}
                 </a>
@@ -501,7 +556,7 @@ const Home = () => {
               <span className='title-highlight'>Tradition?</span>
             </h2>
             <p>
-              Order now and enjoy authentic Gokul Namkeen delivered fresh to
+              Order now and enjoy authentic {companyName} delivered fresh to
               your door. New customers get <strong>10% off</strong> on their
               first order!
             </p>
@@ -515,14 +570,14 @@ const Home = () => {
         <footer className='footer'>
           <div className='footer-content'>
             <div className='footer-brand'>
-              <h4>Gokul Namkeen</h4>
+              <h4>{companyName}</h4>
               <p>
                 Authentic snacks & sweets crafted with tradition, quality, and
                 love since 2004.
               </p>
               <div className='footer-contact-mini'>
-                <span>📍 Mota Varachha, Surat</span>
-                <span>📞 +91 98765 43210</span>
+                {address && <span>📍 {address}</span>}
+                {primaryPhone && <span>📞 {primaryPhone}</span>}
               </div>
             </div>
 
@@ -548,58 +603,64 @@ const Home = () => {
             <div className='footer-section'>
               <h4>Follow Us</h4>
               <div className='social-links'>
-                <a
-                  href='https://www.facebook.com/'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='social-link facebook'
-                  aria-label='Facebook'>
-                  <svg
-                    width='18'
-                    height='18'
-                    viewBox='0 0 24 24'
-                    fill='currentColor'>
-                    <path d='M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.45 2.89h-2.33v6.99A10 10 0 0 0 22 12Z' />
-                  </svg>
-                  <span>Facebook</span>
-                </a>
-                <a
-                  href='https://www.instagram.com/?hl=en'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='social-link instagram'
-                  aria-label='Instagram'>
-                  <svg
-                    width='18'
-                    height='18'
-                    viewBox='0 0 24 24'
-                    fill='currentColor'>
-                    <path d='M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16Z' />
-                  </svg>
-                  <span>Instagram</span>
-                </a>
-                <a
-                  href='https://x.com/'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='social-link x-twitter'
-                  aria-label='X'>
-                  <svg
-                    width='16'
-                    height='16'
-                    viewBox='0 0 24 24'
-                    fill='currentColor'>
-                    <path d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231L18.244 2.25Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z' />
-                  </svg>
-                  <span>X</span>
-                </a>
+                {company?.facebook && (
+                  <a
+                    href={company.facebook}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='social-link facebook'
+                    aria-label='Facebook'>
+                    <svg
+                      width='18'
+                      height='18'
+                      viewBox='0 0 24 24'
+                      fill='currentColor'>
+                      <path d='M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.45 2.89h-2.33v6.99A10 10 0 0 0 22 12Z' />
+                    </svg>
+                    <span>Facebook</span>
+                  </a>
+                )}
+                {company?.instagram && (
+                  <a
+                    href={company.instagram}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='social-link instagram'
+                    aria-label='Instagram'>
+                    <svg
+                      width='18'
+                      height='18'
+                      viewBox='0 0 24 24'
+                      fill='currentColor'>
+                      <path d='M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16Z' />
+                    </svg>
+                    <span>Instagram</span>
+                  </a>
+                )}
+                {company?.twitter && (
+                  <a
+                    href={company.twitter}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    className='social-link x-twitter'
+                    aria-label='X'>
+                    <svg
+                      width='16'
+                      height='16'
+                      viewBox='0 0 24 24'
+                      fill='currentColor'>
+                      <path d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231L18.244 2.25Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z' />
+                    </svg>
+                    <span>X</span>
+                  </a>
+                )}
               </div>
             </div>
           </div>
 
           <div className='footer-bottom'>
             <p>
-              © {new Date().getFullYear()} Gokul Namkeen. All rights reserved.
+              © {new Date().getFullYear()} {companyName}. All rights reserved.
             </p>
             <p className='footer-made'>Made with ❤️ in Surat, Gujarat</p>
           </div>

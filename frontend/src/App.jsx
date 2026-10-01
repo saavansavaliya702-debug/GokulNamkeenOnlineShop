@@ -5,6 +5,8 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import OrderDetail from "./pages/OrderDetail";
+
 import ProductDetail from "./pages/ProductDetail";
 import Register from "./pages/Register.jsx";
 import Login from "./pages/Login.jsx";
@@ -27,6 +29,8 @@ import AdminOrders from "./pages/AdminOrders.jsx";
 import TrackOrder from "./pages/TrackOrder.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import CustomerPage from "./pages/AdminCustomerPage.jsx";
+import AdminCompanyInfo from "./pages/AdminCompanyInfo";
+
 
 function App() {
   const [isAuthenticating, setIsAuthenticating] = useState(true);
@@ -61,6 +65,10 @@ function App() {
             // </PublicRoute>
           }
         />
+        <Route path="/order/:id" element={<OrderDetail />} />
+        <Route path="/admin/company-info" element={<AdminCompanyInfo />} />
+
+
         <Route
           path='/notfound'
           element={

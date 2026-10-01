@@ -14,7 +14,7 @@ const CATEGORIES = [
   "Bakery",
 ];
 
-const WEIGHT_OPTIONS = ["100", "250", "500", "750", "1000"];
+const WEIGHT_OPTIONS = ["100", "250", "500", "750", "1", "2", "5"];
 const UNITS = [
   { value: "g", label: "grams (g)" },
   { value: "kg", label: "kilograms (kg)" },
@@ -29,6 +29,7 @@ const AddProduct = () => {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("Namkeen");
   const [stock, setStock] = useState("");
+  const [lowStockAlert, setLowStockAlert] = useState("5"); // 👈 NEW
   const [weight, setWeight] = useState("");
   const [weightUnit, setWeightUnit] = useState("g");
   const [pcs, setPcs] = useState("");
@@ -113,6 +114,10 @@ const AddProduct = () => {
       toast.error("Select a weight");
       return;
     }
+    if (lowStockAlert !== "" && Number(lowStockAlert) < 0) {
+      toast.error("Low stock alert must be 0 or greater");
+      return;
+    }
 
     setLoading(true);
 
@@ -123,6 +128,7 @@ const AddProduct = () => {
     formData.append("pcs", pcs || "0");
     formData.append("price", price);
     formData.append("stock", stock || "0");
+    formData.append("low_stock_alert", lowStockAlert || "5"); // 👈 NEW
     formData.append("weight", weight);
     formData.append("weightUnit", weightUnit);
 
@@ -145,6 +151,7 @@ const AddProduct = () => {
       setDescription("");
       setCategory("Namkeen");
       setStock("");
+      setLowStockAlert("5"); // 👈 reset to default
       setWeight("");
       setWeightUnit("g");
       setPcs("");
@@ -162,6 +169,12 @@ const AddProduct = () => {
       setLoading(false);
     }
   };
+
+  // Is the current stock already at/below the alert level?
+  const stockNum = Number(stock || 0);
+  const alertNum = Number(lowStockAlert || 0);
+  const willBeLowStock =
+    stock !== "" && lowStockAlert !== "" && stockNum <= alertNum;
 
   return (
     <>
@@ -288,6 +301,33 @@ const AddProduct = () => {
                       />
                     </div>
                   </div>
+
+                  {/* 👇 NEW — Low stock alert field */}
+                  <div className="ap-field">
+                    <label htmlFor="lowStockAlert">
+                      ⚠️ Low Stock Alert Threshold
+                    </label>
+                    <input
+                      id="lowStockAlert"
+                      type="number"
+                      value={lowStockAlert}
+                      onChange={(e) => setLowStockAlert(e.target.value)}
+                      placeholder="5"
+                      min="0"
+                    />
+                    <small className="ap-hint">
+                      Alert when stock drops to this number or below.
+                      Default is 5. Set to 0 to disable alerts.
+                    </small>
+                  </div>
+
+                  {willBeLowStock && (
+                    <div className="ap-inline-warning">
+                      ⚠️ Current stock ({stockNum}) is at or below the alert
+                      threshold ({alertNum}). This product will appear in the
+                      Low Stock section immediately.
+                    </div>
+                  )}
 
                   <div className="ap-row">
                     <div className="ap-field">
@@ -442,6 +482,12 @@ const AddProduct = () => {
                     <li>
                       <span>Stock</span>
                       <strong>{stock || "—"}</strong>
+                    </li>
+                    <li>
+                      <span>Low Stock Alert</span>
+                      <strong>
+                        {lowStockAlert ? `≤ ${lowStockAlert}` : "—"}
+                      </strong>
                     </li>
                     <li>
                       <span>Pcs</span>

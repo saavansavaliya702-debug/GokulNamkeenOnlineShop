@@ -643,3 +643,84 @@
 .action-icon {
   font-size: 1.5rem;
 }
+/* ─── Clickable table rows ─── */
+.dash-row-clickable {
+  cursor: pointer;
+  transition: background 180ms ease;
+  position: relative;
+}
+
+.dash-row-clickable:hover {
+  background: #f0fdf4 !important;
+}
+
+.dash-row-clickable:hover .cust-cell strong {
+  color: #15803d;
+}
+
+.dash-row-clickable:active {
+  background: #dcfce7 !important;
+}
+
+.dash-row-clickable:focus-visible {
+  outline: 2px solid #16a34a;
+  outline-offset: -2px;
+}
+
+.dash-row-clickable::after {
+  content: "→";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%) translateX(-6px);
+  opacity: 0;
+  color: #16a34a;
+  font-weight: 700;
+  transition: opacity 180ms ease, transform 180ms ease;
+  pointer-events: none;
+}
+
+.dash-row-clickable:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+.dash-row-clickable {
+  cursor: pointer;
+  transition: background 180ms ease;
+  position: relative;
+}
+
+.dash-row-clickable:hover {
+  background: #f0fdf4 !important;
+}
+
+.dash-row-clickable:hover .cust-cell strong {
+  color: #15803d;
+}
+
+.dash-row-clickable:active {
+  background: #dcfce7 !important;
+}
+
+.dash-row-clickable:focus-visible {
+  outline: 2px solid #16a34a;
+  outline-offset: -2px;
+}
+
+.dash-row-clickable::after {
+  content: "→";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%) translateX(-6px);
+  opacity: 0;
+  color: #16a34a;
+  font-weight: 700;
+  transition: opacity 180ms ease, transform 180ms ease;
+  pointer-events: none;
+}
+
+.dash-row-clickable:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}

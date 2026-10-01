@@ -81,6 +81,7 @@ const PAYMENT_METHODS = [
   { id: "upi", label: "UPI", icon: "📱" },
   { id: "netbanking", label: "Net Banking", icon: "🏦" },
   { id: "cod", label: "Cash on Delivery", icon: "💵" },
+  { id: "cash", label: "Cash Payment", icon: "💰" },
 ];
 
 const FREE_SHIPPING_THRESHOLD = 500;
@@ -297,6 +298,17 @@ const Payment = () => {
     finalizeSuccess(saved, codId);
   };
 
+  /* ---------------- Cash flow -------------------------------------- */
+  const handleCash = async () => {
+    const cashId = `CASH-${Date.now().toString().slice(-8)}`;
+    const saved = await saveOrder({
+      payment_mode: "cash",
+      payment_id: cashId,
+      payment_status: "pending",
+    });
+    finalizeSuccess(saved, cashId);
+  };
+
   /* ---------------- Razorpay flow --------------------------------- */
   const handleRazorpay = async () => {
     const loaded = await loadRazorpayScript();
@@ -384,10 +396,24 @@ const Payment = () => {
 
       const rzp = new window.Razorpay(options);
 
-      rzp.on("payment.failed", (r) => {
+      rzp.on("payment.failed", async (r) => {
         const msg =
           r?.error?.description || r?.error?.reason || "Payment failed";
         toast.error(msg);
+
+        // Save order with failed status
+        try {
+          const failedId = `FAILED-${Date.now().toString().slice(-8)}`;
+          await saveOrder({
+            payment_mode: paymentMethod,
+            payment_id: failedId,
+            payment_status: "failed",
+          });
+          toast.error("Order saved with failed payment status");
+        } catch (saveErr) {
+          console.error("Failed to save order with failed status:", saveErr);
+        }
+
         reject(new Error(msg));
       });
 
@@ -418,6 +444,8 @@ const Payment = () => {
     try {
       if (paymentMethod === "cod") {
         await handleCOD();
+      } else if (paymentMethod === "cash") {
+        await handleCash();
       } else {
         await handleRazorpay();
       }

@@ -22,10 +22,11 @@ const Record = () => {
   const [saving, setSaving] = useState(false);
 
   // ---- Edit-product state ----
-  const [editFor, setEditFor] = useState(null); // product id being edited
+  const [editFor, setEditFor] = useState(null);
   const [editName, setEditName] = useState("");
   const [editCategory, setEditCategory] = useState("");
-  const [editVariants, setEditVariants] = useState([]); // array of variant objects
+  const [editLowStockAlert, setEditLowStockAlert] = useState("5");
+  const [editVariants, setEditVariants] = useState([]);
   const [editSaving, setEditSaving] = useState(false);
 
   const fetchProducts = async () => {
@@ -162,6 +163,9 @@ const Record = () => {
     setEditFor(product.id);
     setEditName(product.name || "");
     setEditCategory(product.category || "");
+    setEditLowStockAlert(
+      product.low_stock_alert != null ? String(product.low_stock_alert) : "5"
+    );
     setEditVariants(
       getVariants(product).map((v) => ({
         weight: v.weight,
@@ -177,6 +181,7 @@ const Record = () => {
     setEditFor(null);
     setEditName("");
     setEditCategory("");
+    setEditLowStockAlert("5");
     setEditVariants([]);
   };
 
@@ -203,7 +208,11 @@ const Record = () => {
       return;
     }
 
-    // validate variants
+    if (editLowStockAlert !== "" && Number(editLowStockAlert) < 0) {
+      toast.error("Low stock alert must be 0 or greater");
+      return;
+    }
+
     for (let i = 0; i < editVariants.length; i++) {
       const v = editVariants[i];
       if (v.weight === "" || v.price === "") {
@@ -217,6 +226,8 @@ const Record = () => {
     const payload = {
       name: editName.trim(),
       category: editCategory.trim(),
+      low_stock_alert:
+        editLowStockAlert === "" ? 5 : Number(editLowStockAlert),
       variants: editVariants.map((v) => ({
         weight: Number(v.weight),
         weightUnit: v.weightUnit || "g",
@@ -271,6 +282,26 @@ const Record = () => {
       : p.stock || 0;
   };
 
+  const getAlertLevel = (p) => Number(p.low_stock_alert ?? 5);
+
+  const isLowStock = (p) => {
+    const s = getTotalStock(p);
+    return s > 0 && s <= getAlertLevel(p);
+  };
+
+  const isOutOfStock = (p) => getTotalStock(p) === 0;
+
+  /* ⭐ NEW — Row click handler */
+  const handleRowClick = (product, isEditing) => {
+    // If already editing this row, close it
+    if (isEditing) {
+      closeEdit();
+      return;
+    }
+    // Otherwise open the edit panel
+    openEdit(product);
+  };
+
   const filtered = products.filter((p) => {
     const matchesSearch = p.name
       .toLowerCase()
@@ -278,11 +309,10 @@ const Record = () => {
     if (!matchesSearch) return false;
 
     const isActive = p.is_active ?? true;
-    const totalStock = getTotalStock(p);
 
     if (filter === "active") return isActive;
     if (filter === "inactive") return !isActive;
-    if (filter === "low") return totalStock > 0 && totalStock <= 10;
+    if (filter === "low") return isLowStock(p);
     return true;
   });
 
@@ -290,10 +320,7 @@ const Record = () => {
     total: products.length,
     active: products.filter((p) => p.is_active ?? true).length,
     inactive: products.filter((p) => !(p.is_active ?? true)).length,
-    low: products.filter((p) => {
-      const s = getTotalStock(p);
-      return s > 0 && s <= 10;
-    }).length,
+    low: products.filter(isLowStock).length,
   };
 
   return (
@@ -339,7 +366,7 @@ const Record = () => {
             </div>
           </header>
 
-          {/* Stats / Filters */}
+          {/* Filters */}
           {!loading && (
             <div className="record-filters">
               {[
@@ -406,10 +433,25 @@ const Record = () => {
 
                     return (
                       <Fragment key={p.id}>
+                        {/* ⭐ Main product row — clickable */}
                         <tr
-                          className={`${!isActive ? "row-inactive" : ""} ${
-                            isEditing ? "row-editing" : ""
-                          }`}
+                          className={`record-row-clickable ${
+                            !isActive ? "row-inactive" : ""
+                          } ${isEditing ? "row-editing is-selected" : ""}`}
+                          onClick={() => handleRowClick(p, isEditing)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleRowClick(p, isEditing);
+                            }
+                          }}
+                          title={
+                            isEditing
+                              ? "Click to close editor"
+                              : "Click to edit this product"
+                          }
                         >
                           <td className="col-image">
                             <div className="record-thumb">
@@ -458,7 +500,10 @@ const Record = () => {
                                     </span>
                                     <button
                                       className="v-remove"
-                                      onClick={() => removeVariant(p, idx)}
+                                      onClick={(e) => {
+                                        e.stopPropagation(); // ⭐ don't trigger row click
+                                        removeVariant(p, idx);
+                                      }}
                                       title="Remove variant"
                                       type="button"
                                     >
@@ -473,16 +518,27 @@ const Record = () => {
                           <td className="col-stock">
                             <span
                               className={`stock-badge ${
-                                totalStock > 10
-                                  ? "in"
-                                  : totalStock > 0
+                                isOutOfStock(p)
+                                  ? "out"
+                                  : isLowStock(p)
                                   ? "low"
-                                  : "out"
+                                  : "in"
                               }`}
                             >
-                              {totalStock > 0
-                                ? `${totalStock} units`
-                                : "Out of stock"}
+                              {isOutOfStock(p)
+                                ? "Out of stock"
+                                : `${totalStock} units`}
+                              {isLowStock(p) && (
+                                <small
+                                  style={{
+                                    opacity: 0.7,
+                                    marginLeft: 6,
+                                    fontWeight: 500,
+                                  }}
+                                >
+                                  (≤ {getAlertLevel(p)})
+                                </small>
+                              )}
                             </span>
                           </td>
 
@@ -491,7 +547,10 @@ const Record = () => {
                               className={`status-toggle ${
                                 isActive ? "on" : "off"
                               }`}
-                              onClick={() => toggleActive(p)}
+                              onClick={(e) => {
+                                e.stopPropagation(); // ⭐ don't trigger row click
+                                toggleActive(p);
+                              }}
                               title={
                                 isActive
                                   ? "Click to deactivate"
@@ -512,9 +571,10 @@ const Record = () => {
                             <div className="action-btns">
                               <button
                                 className="btn-edit"
-                                onClick={() =>
-                                  isEditing ? closeEdit() : openEdit(p)
-                                }
+                                onClick={(e) => {
+                                  e.stopPropagation(); // ⭐ don't trigger row click
+                                  isEditing ? closeEdit() : openEdit(p);
+                                }}
                                 type="button"
                                 title="Edit product"
                               >
@@ -522,14 +582,20 @@ const Record = () => {
                               </button>
                               <button
                                 className="btn-variant"
-                                onClick={() => openEditor(p.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // ⭐ don't trigger row click
+                                  openEditor(p.id);
+                                }}
                                 type="button"
                               >
                                 ➕ Variant
                               </button>
                               <button
                                 className="btn-delete"
-                                onClick={() => handleDelete(p.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // ⭐ don't trigger row click
+                                  handleDelete(p.id);
+                                }}
                                 title="Delete product"
                                 type="button"
                               >
@@ -543,7 +609,10 @@ const Record = () => {
                         {isEditing && (
                           <tr className="editor-row edit-row">
                             <td colSpan={6}>
-                              <div className="variant-editor edit-editor">
+                              <div
+                                className="variant-editor edit-editor"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 <h4>✏️ Editing: {p.name}</h4>
 
                                 <div className="edit-meta">
@@ -568,6 +637,23 @@ const Record = () => {
                                       }
                                       placeholder="e.g. Grains"
                                     />
+                                  </div>
+
+                                  <div className="editor-field">
+                                    <label>⚠️ Low Stock Alert</label>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      value={editLowStockAlert}
+                                      onChange={(e) =>
+                                        setEditLowStockAlert(e.target.value)
+                                      }
+                                      placeholder="5"
+                                    />
+                                    <small className="field-hint">
+                                      Alert when total stock drops to this
+                                      number or below.
+                                    </small>
                                   </div>
                                 </div>
 
@@ -695,7 +781,9 @@ const Record = () => {
                                     disabled={editSaving}
                                     type="button"
                                   >
-                                    {editSaving ? "Saving..." : "💾 Save changes"}
+                                    {editSaving
+                                      ? "Saving..."
+                                      : "💾 Save changes"}
                                   </button>
                                   <button
                                     className="btn-cancel"
@@ -714,7 +802,10 @@ const Record = () => {
                         {isOpen && (
                           <tr className="editor-row">
                             <td colSpan={6}>
-                              <div className="variant-editor">
+                              <div
+                                className="variant-editor"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 <h4>Add new variant for {p.name}</h4>
                                 <div className="editor-fields">
                                   <div className="editor-field">

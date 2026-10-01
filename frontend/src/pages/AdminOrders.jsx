@@ -1,15 +1,69 @@
 // src/pages/AdminOrders.jsx
 import { Fragment, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import api from "../utils/api";
 import AdminNavbar from "../Navbar/AdminNavbar";
 import { getImageUrl } from "../utils/image";
+import { useAuth } from "./AuthContext";
 import "../Css/AdminOrders.css";
 
 const ORDER_STATUSES = ["pending", "shipped", "delivered", "cancelled"];
 const PAYMENT_STATUSES = ["pending", "paid", "failed"];
 
+/**
+ * Real-world sync rules (payment and order are independent in general):
+ *
+ *  Payment → Order:
+ *    failed  → cancelled           (can't fulfil an unpaid order)
+ *    paid    → un-cancel if cancelled (payment went through after all)
+ *    pending → no change           (COD is pending, order can still ship)
+ *
+ *  Order → Payment:
+ *    delivered → paid               (COD collected on delivery)
+ *    cancelled → no change          (admin refunds separately)
+ *    shipped   → no change
+ *    pending   → no change
+ */
+const applySyncRules = (patch, current) => {
+  const effective = { ...patch };
+  const notes = [];
+
+  /* ---- Payment changed ---- */
+  if (patch.payment_status !== undefined) {
+    if (
+      patch.payment_status === "failed" &&
+      current.order_status !== "cancelled"
+    ) {
+      effective.order_status = "cancelled";
+      notes.push("order cancelled");
+    }
+    if (
+      patch.payment_status === "paid" &&
+      current.order_status === "cancelled"
+    ) {
+      effective.order_status = "pending";
+      notes.push("order reopened as pending");
+    }
+  }
+
+  /* ---- Order changed ---- */
+  if (patch.order_status !== undefined && patch.payment_status === undefined) {
+    if (
+      patch.order_status === "delivered" &&
+      current.payment_status !== "paid"
+    ) {
+      effective.payment_status = "paid";
+      notes.push("payment marked paid");
+    }
+  }
+
+  return { effective, notes };
+};
+
 const AdminOrders = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
@@ -17,7 +71,16 @@ const AdminOrders = () => {
   const [expanded, setExpanded] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  /* Admin guard */
+  useEffect(() => {
+    if (user && !user.is_admin) {
+      navigate("/", { replace: true });
+    }
+  }, [user, navigate]);
+
   const fetchOrders = async (isRefresh = false) => {
+    if (!user) return;
+
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
 
@@ -34,15 +97,25 @@ const AdminOrders = () => {
 
   useEffect(() => {
     fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateStatus = async (id, patch) => {
+    const current = orders.find((o) => o.id === id) || {};
+    const { effective, notes } = applySyncRules(patch, current);
+
     const prev = orders;
-    setOrders((o) => o.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+    setOrders((o) =>
+      o.map((p) => (p.id === id ? { ...p, ...effective } : p))
+    );
 
     try {
-      await api.put(`/payments/${id}/status`, patch);
-      toast.success("Order updated");
+      await api.put(`/payments/${id}/status`, effective);
+      toast.success(
+        notes.length
+          ? `Updated — ${notes.join(", ")}`
+          : "Order updated"
+      );
     } catch (err) {
       setOrders(prev);
       toast.error(
@@ -64,6 +137,25 @@ const AdminOrders = () => {
       setOrders(prev);
       toast.error(err.response?.data?.message || "Delete failed");
     }
+  };
+
+  /* ⭐ Row click → open the order detail page */
+  const handleRowClick = (order, event) => {
+    // Ignore clicks on interactive elements inside the row
+    const target = event?.target;
+    if (target) {
+      const isInteractive =
+        target.closest("button") ||
+        target.closest("select") ||
+        target.closest("input") ||
+        target.closest("a") ||
+        target.closest(".items-toggle") ||
+        target.closest(".status-select") ||
+        target.closest(".btn-delete");
+      if (isInteractive) return;
+    }
+
+    navigate(`/order/${order.id}`);
   };
 
   const visible = orders.filter((o) => {
@@ -128,7 +220,7 @@ const AdminOrders = () => {
             </button>
           </header>
 
-          {/* Filters */}
+          {/* Toolbar */}
           <div className="ao-toolbar">
             <div className="ao-search-wrap">
               <span className="search-icon">🔍</span>
@@ -192,7 +284,7 @@ const AdminOrders = () => {
                     <th>Payment</th>
                     <th>Status</th>
                     <th>Placed</th>
-                    <th></th>
+                    <th className="th-actions">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -201,10 +293,26 @@ const AdminOrders = () => {
                     const itemCount = Array.isArray(o.items)
                       ? o.items.length
                       : 0;
+                    const paymentFailed = o.payment_status === "failed";
 
                     return (
                       <Fragment key={o.id}>
-                        <tr className={isOpen ? "is-expanded" : ""}>
+                        {/* ⭐ Main row — clickable */}
+                        <tr
+                          className={`ao-row-clickable ${
+                            isOpen ? "is-expanded" : ""
+                          } ${paymentFailed ? "row-failed" : ""}`}
+                          onClick={(e) => handleRowClick(o, e)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              handleRowClick(o, e);
+                            }
+                          }}
+                          title={`View order #${o.id}`}
+                        >
                           <td>
                             <span className="order-id">
                               #{String(o.id).padStart(5, "0")}
@@ -227,9 +335,10 @@ const AdminOrders = () => {
                           <td>
                             <button
                               className="items-toggle"
-                              onClick={() =>
-                                setExpanded(isOpen ? null : o.id)
-                              }
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpanded(isOpen ? null : o.id);
+                              }}
                               type="button"
                             >
                               {itemCount} item{itemCount === 1 ? "" : "s"}
@@ -257,6 +366,7 @@ const AdminOrders = () => {
                                   o.payment_status
                                 ).toLowerCase()}`}
                               >
+                                {paymentFailed && "⚠ "}
                                 {o.payment_status}
                               </span>
                               <span className="payment-meta">
@@ -272,6 +382,7 @@ const AdminOrders = () => {
                             <select
                               className={`status-select status-${o.order_status}`}
                               value={o.order_status}
+                              onClick={(e) => e.stopPropagation()}
                               onChange={(e) =>
                                 updateStatus(o.id, {
                                   order_status: e.target.value,
@@ -290,10 +401,13 @@ const AdminOrders = () => {
                             {formatDate(o.createdAt || o.created_at)}
                           </td>
 
-                          <td>
+                          <td className="td-actions">
                             <button
                               className="btn-delete"
-                              onClick={() => deleteOrder(o.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteOrder(o.id);
+                              }}
                               title="Delete order"
                               type="button"
                             >
@@ -305,7 +419,10 @@ const AdminOrders = () => {
                         {isOpen && (
                           <tr className="detail-row">
                             <td colSpan={8}>
-                              <div className="detail-panel">
+                              <div
+                                className="detail-panel"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 <div className="detail-col">
                                   <h4>📍 Shipping Address</h4>
                                   <p>
@@ -322,8 +439,9 @@ const AdminOrders = () => {
                                 <div className="detail-col">
                                   <h4>💳 Payment Status</h4>
                                   <select
-                                    className="status-select"
+                                    className={`status-select status-${o.payment_status}`}
                                     value={o.payment_status}
+                                    onClick={(e) => e.stopPropagation()}
                                     onChange={(e) =>
                                       updateStatus(o.id, {
                                         payment_status: e.target.value,
@@ -341,6 +459,37 @@ const AdminOrders = () => {
                                       ID: {o.payment_id}
                                     </p>
                                   )}
+                                  {paymentFailed && (
+                                    <p className="payment-warning">
+                                      ⚠ Payment failed — order cancelled
+                                    </p>
+                                  )}
+                                  {o.payment_status === "paid" &&
+                                    o.order_status === "pending" && (
+                                      <p className="payment-success">
+                                        ✓ Payment received — awaiting shipment
+                                      </p>
+                                    )}
+                                  {o.payment_status === "paid" &&
+                                    o.order_status === "delivered" && (
+                                      <p className="payment-success">
+                                        ✓ Payment received — order delivered
+                                      </p>
+                                    )}
+                                  {o.payment_status === "pending" &&
+                                    o.payment_mode?.toLowerCase() ===
+                                      "cod" && (
+                                      <p className="payment-pending">
+                                        ⏳ COD — collect on delivery
+                                      </p>
+                                    )}
+                                  {o.payment_status === "pending" &&
+                                    o.payment_mode?.toLowerCase() !==
+                                      "cod" && (
+                                      <p className="payment-pending">
+                                        ⏳ Awaiting online payment
+                                      </p>
+                                    )}
                                 </div>
 
                                 <div className="detail-col items-col">

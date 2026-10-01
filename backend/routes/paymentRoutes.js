@@ -394,6 +394,27 @@ router.get("/my-orders", protect, async (req, res) => {
 });
 
 /* ═══════════════════════════════════════════════════════════════
+   ⭐ GET /api/payments/:id — get one order (detail page)
+   MUST come after /my-orders and before /:id/status
+   ═══════════════════════════════════════════════════════════════ */
+router.get("/:id", async (req, res) => {
+  try {
+    const order = await Order.findByPk(req.params.id);
+
+    if (!order || order.is_delete) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.json(order);
+  } catch (err) {
+    console.error("getOrderById:", err);
+    res
+      .status(500)
+      .json({ message: "Failed to fetch order", error: err.message });
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════════
    PUT /api/payments/:id/status — update status + reduce stock
    ═══════════════════════════════════════════════════════════════ */
 router.put("/:id/status", protect, adminOnly, async (req, res) => {

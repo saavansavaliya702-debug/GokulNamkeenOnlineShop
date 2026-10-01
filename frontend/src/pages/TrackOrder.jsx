@@ -5,6 +5,7 @@ import toast, { Toaster } from "react-hot-toast";
 import api from "../utils/api";
 import UserNavbar from "../Navbar/UserNavbar";
 import { getImageUrl } from "../utils/image";
+import { useAuth } from "./AuthContext";
 import "../Css/TrackOrder.css";
 
 const STEP_ALIASES = {
@@ -23,13 +24,24 @@ const ORDER_STEPS = [
 ];
 
 const TrackOrder = () => {
+  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user) {
+      toast.error("Please login to view your orders");
+      navigate("/login");
+    }
+  }, [user, navigate]);
+
   const fetchOrders = useCallback(async (isRefresh = false) => {
+    if (!user) return; // Don't fetch if not authenticated
+
     if (isRefresh) setRefreshing(true);
     else setLoading(true);
 
@@ -42,7 +54,7 @@ const TrackOrder = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchOrders();

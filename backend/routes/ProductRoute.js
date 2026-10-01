@@ -4,10 +4,6 @@ const productController = require("../controller/productController");
 const { protect, adminOnly } = require("../middleware/auth");
 const upload = require("../middleware/upload");
 
-/* --------------------------------------------------------------
-   Multer wrapper — converts Multer errors into clean 400 responses
-   instead of crashing the server with "Unhandled error"
-   -------------------------------------------------------------- */
 const uploadSingle = (field) => (req, res, next) => {
   upload.single(field)(req, res, (err) => {
     if (err) {
@@ -20,6 +16,10 @@ const uploadSingle = (field) => (req, res, next) => {
 
 /* ─── Public ─── */
 router.get("/", productController.getAllProducts);
+
+// ⭐ MUST come before "/:id"
+router.get("/low-stock", productController.getLowStockProducts);
+
 router.get("/:id", productController.getProductById);
 
 /* ─── Admin-only ─── */
@@ -31,7 +31,6 @@ router.post(
   productController.createProduct
 );
 
-/* ➕ Add a single variant (pure append) */
 router.post(
   "/:id/variants",
   protect,
@@ -39,7 +38,6 @@ router.post(
   productController.addVariant
 );
 
-/* 🗑️ Remove a single variant by index */
 router.delete(
   "/:id/variants/:index",
   protect,
@@ -47,7 +45,6 @@ router.delete(
   productController.removeVariant
 );
 
-/* ✏️ Full product update (also used by the frontend to add/remove variants) */
 router.put(
   "/:id",
   protect,
@@ -56,7 +53,6 @@ router.put(
   productController.updateProduct
 );
 
-/* 🗑️ Soft-delete the product */
 router.delete("/:id", protect, adminOnly, productController.deleteProduct);
 
 module.exports = router;

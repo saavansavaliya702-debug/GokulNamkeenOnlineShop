@@ -1,389 +1,268 @@
-// backend/controller/productController.js
+"use strict";
+
 const { AddProduct } = require("../models");
+const { Op } = require("sequelize");
 
-/* ═══════════════════════════════════════════
-   HELPERS
-   ═══════════════════════════════════════════ */
-function parseVariants(raw) {
-  if (!raw) return [];
-  let arr = raw;
-  if (typeof raw === "string") {
-    try {
-      arr = JSON.parse(raw);
-    } catch {
-      return [];
-    }
-  }
-  if (!Array.isArray(arr)) return [];
-
-  return arr
-    .map((v) => ({
-      weight: v.weight !== "" && v.weight != null ? Number(v.weight) : null,
-      weightUnit: v.weightUnit || "g",
-      price: v.price !== "" && v.price != null ? Number(v.price) : null,
-      stock: v.stock !== "" && v.stock != null ? Number(v.stock) : 0,
-      pcs: v.pcs !== "" && v.pcs != null ? Number(v.pcs) : 0,
-    }))
-    .filter((v) => v.weight != null && v.price != null);
-}
-
-function pickHeadline(variants) {
-  if (!Array.isArray(variants) || variants.length === 0) return null;
-  return variants[variants.length - 1];
-}
-
-function legacyFieldsFromVariants(variants) {
-  const head = pickHeadline(variants);
-  const totalStock = Array.isArray(variants)
-    ? variants.reduce((s, v) => s + (Number(v.stock) || 0), 0)
-    : 0;
-
-  if (!head) {
-    return {
-      price: null,
-      weight: null,
-      weightUnit: "g",
-      stock: totalStock,
-      pcs: 0,
-    };
-  }
-  return {
-    price: head.price ?? null,
-    weight: head.weight ?? null,
-    weightUnit: head.weightUnit ?? "g",
-    stock: totalStock,
-    pcs: head.pcs ?? 0,
-  };
-}
-
-/* ═══════════════════════════════════════════
-   GET ALL
-   ═══════════════════════════════════════════ */
+/* ──────────────────────────────────────────────
+   GET /api/products   (public)
+   ────────────────────────────────────────────── */
 exports.getAllProducts = async (req, res) => {
   try {
-    const where =
-      req.query.all === "true"
-        ? { is_delete: false }                   // admin: all non-deleted
-        : { is_delete: false, is_active: true }; // customers: only active
-
     const products = await AddProduct.findAll({
-      where,
+      where: { is_delete: false },
       order: [["createdAt", "DESC"]],
     });
     res.json(products);
   } catch (err) {
-    console.error("getAllProducts error:", err);
-    res.status(500).json({ message: "Failed to fetch products" });
+    console.error("getAllProducts:", err);
+    res.status(500).json({ error: "Failed to fetch products" });
   }
 };
 
-/* ═══════════════════════════════════════════
-   GET ONE
-   ═══════════════════════════════════════════ */
+/* ──────────────────────────────────────────────
+   GET /api/products/low-stock   (public or admin)
+   Returns products where stock <= low_stock_alert
+   ────────────────────────────────────────────── */
+exports.getLowStockProducts = async (req, res) => {
+  try {
+    const products = await AddProduct.findAll({
+      where: { is_delete: false, is_active: true },
+      order: [["stock", "ASC"]],
+    });
+
+    const lowStock = products.filter((p) => {
+      const stock = Number(p.stock) || 0;
+      const alert = Number(p.low_stock_alert ?? 5);
+      return stock <= alert;
+    });
+
+    console.log(
+      `📦 Low-stock check: ${lowStock.length} of ${products.length} products`
+    );
+
+    res.json(lowStock);
+  } catch (err) {
+    console.error("getLowStockProducts:", err);
+    res.status(500).json({ error: "Failed to fetch low stock products" });
+  }
+};
+
+/* ──────────────────────────────────────────────
+   GET /api/products/:id   (public)
+   ────────────────────────────────────────────── */
 exports.getProductById = async (req, res) => {
   try {
     const product = await AddProduct.findOne({
       where: { id: req.params.id, is_delete: false },
     });
-    if (!product) return res.status(404).json({ message: "Not found" });
+    if (!product) return res.status(404).json({ error: "Product not found" });
     res.json(product);
   } catch (err) {
-    console.error("getProductById error:", err);
-    res.status(500).json({ message: "Failed" });
+    console.error("getProductById:", err);
+    res.status(500).json({ error: "Failed to fetch product" });
   }
 };
 
-/* ═══════════════════════════════════════════
-   CREATE
-   ═══════════════════════════════════════════ */
+/* ──────────────────────────────────────────────
+   POST /api/products   (admin)
+   ────────────────────────────────────────────── */
 exports.createProduct = async (req, res) => {
   try {
     const {
       name,
-      description,
-      category,
-      stock,
-      imageUrl,
       price,
+      stock,
+      low_stock_alert, // 👈 NEW
+      category,
       weight,
       weightUnit,
       pcs,
-      is_active,
+      variants,
+      description,
+      imageUrl,
     } = req.body;
 
-    const variants = parseVariants(req.body.variants);
-
-    if (!name) {
-      return res.status(400).json({ message: "Name is required" });
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: "Product name is required" });
     }
 
-    /* Image */
-    let finalImage = "";
-    if (req.file) {
-      finalImage = "/uploads/" + req.file.filename;
-    } else if (imageUrl) {
-      if (imageUrl.startsWith("data:")) {
-        return res.status(400).json({ message: "Base64 not allowed" });
+    // Parse variants safely (may arrive as JSON string via multipart form)
+    let parsedVariants = [];
+    if (variants) {
+      try {
+        parsedVariants =
+          typeof variants === "string" ? JSON.parse(variants) : variants;
+      } catch {
+        parsedVariants = [];
       }
-      finalImage = imageUrl;
     }
 
-    /* Headline variant */
-    const head = pickHeadline(variants);
-    const finalPrice = head?.price ?? (price ? Number(price) : null);
-    const finalWeight = head?.weight ?? (weight ? Number(weight) : null);
-    const finalWeightUnit = head?.weightUnit ?? weightUnit ?? "g";
-    const finalPcs = head?.pcs ?? (pcs != null && pcs !== "" ? Number(pcs) : 0);
-
-    /* If no variants, synthesize one from top-level fields */
-    let finalVariants = variants;
-    if (
-      finalVariants.length === 0 &&
-      (finalPrice != null || finalWeight != null)
-    ) {
-      finalVariants = [
-        {
-          weight: finalWeight,
-          weightUnit: finalWeightUnit,
-          price: finalPrice,
-          stock: Number(stock) || 0,
-          pcs: finalPcs,
-        },
-      ];
-    }
-
-    /* Total stock = sum of variant stocks */
-    const totalStock = finalVariants.reduce(
-      (s, v) => s + (Number(v.stock) || 0),
-      0
-    );
-    const finalStock = finalVariants.length > 0 ? totalStock : Number(stock) || 0;
+    const imagePath = req.file
+      ? `/uploads/${req.file.filename}`
+      : imageUrl || null;
 
     const product = await AddProduct.create({
-      name,
-      description: description || "",
-      category: category || "Namkeen",
-      image: finalImage,
-      stock: finalStock,
-      price: finalPrice,
-      weight: finalWeight,
-      weightUnit: finalWeightUnit,
-      pcs: finalPcs,
-      variants: finalVariants,
-      is_active: is_active === undefined ? true : Boolean(is_active),
+      name: name.trim(),
+      price: price !== undefined && price !== "" ? Number(price) : null,
+      stock: Number(stock) || 0,
+      low_stock_alert:
+        low_stock_alert !== undefined && low_stock_alert !== ""
+          ? Number(low_stock_alert)
+          : 5,
+      category: category || null,
+      weight: weight ? Number(weight) : null,
+      weightUnit: weightUnit || "g",
+      pcs: Number(pcs) || 0,
+      variants: parsedVariants,
+      description: description || null,
+      image: imagePath,
     });
 
     res.status(201).json(product);
   } catch (err) {
-    console.error("createProduct error:", err);
-    res.status(500).json({ message: "Failed to create product" });
+    console.error("createProduct:", err);
+    res.status(500).json({ error: err.message || "Failed to add product" });
   }
 };
 
-/* ═══════════════════════════════════════════
-   UPDATE
-   ═══════════════════════════════════════════ */
+/* ──────────────────────────────────────────────
+   PUT /api/products/:id   (admin)
+   ────────────────────────────────────────────── */
 exports.updateProduct = async (req, res) => {
   try {
     const product = await AddProduct.findOne({
       where: { id: req.params.id, is_delete: false },
     });
-    if (!product) return res.status(404).json({ message: "Not found" });
+    if (!product) return res.status(404).json({ error: "Product not found" });
 
     const {
       name,
-      description,
-      category,
-      stock,
-      imageUrl,
       price,
+      stock,
+      low_stock_alert, // 👈 NEW
+      category,
       weight,
       weightUnit,
-      pcs,           // ⭐ NEW
-      is_active,     // ⭐ NEW
+      pcs,
+      variants,
+      description,
+      imageUrl,
+      is_active,
     } = req.body;
 
-    const payload = {
-      name: product.name,
-      description: product.description,
-      category: product.category,
-      stock: product.stock,
-      image: product.image,
-      variants: product.variants,
-      price: product.price,
-      weight: product.weight,
-      weightUnit: product.weightUnit,
-      pcs: product.pcs,
-      is_active: product.is_active,
-    };
-
-    if (name !== undefined) payload.name = name;
-    if (description !== undefined) payload.description = description;
-    if (category !== undefined) payload.category = category;
-
-    /* ── Variants ── */
-    let variantsTouched = false;
-    if (req.body.variants !== undefined) {
-      const variants = parseVariants(req.body.variants);
-      payload.variants = variants;
-      variantsTouched = true;
-
-      const legacy = legacyFieldsFromVariants(variants);
-      payload.price = legacy.price;
-      payload.weight = legacy.weight;
-      payload.weightUnit = legacy.weightUnit;
-      payload.stock = legacy.stock;
-      payload.pcs = legacy.pcs;
-    }
-
-    /* ── Top-level updates (only if variants weren't sent) ── */
-    if (!variantsTouched) {
-      if (stock !== undefined && stock !== "" && !Number.isNaN(Number(stock))) {
-        payload.stock = Number(stock);
+    let parsedVariants = product.variants;
+    if (variants !== undefined) {
+      try {
+        parsedVariants =
+          typeof variants === "string" ? JSON.parse(variants) : variants;
+      } catch {
+        parsedVariants = product.variants;
       }
-      if (price !== undefined && price !== "") payload.price = Number(price);
-      if (weight !== undefined && weight !== "") payload.weight = Number(weight);
-      if (weightUnit !== undefined) payload.weightUnit = weightUnit;
-      if (pcs !== undefined && pcs !== "") payload.pcs = Number(pcs);
     }
 
-    /* ⭐ is_active can always be set (independent of variants) */
-    if (is_active !== undefined) {
-      payload.is_active = Boolean(is_active);
-    }
+    const imagePath = req.file
+      ? `/uploads/${req.file.filename}`
+      : imageUrl || product.image;
 
-    /* ── Image ── */
-    if (req.file) {
-      payload.image = "/uploads/" + req.file.filename;
-    } else if (imageUrl !== undefined) {
-      payload.image = imageUrl;
-    }
+    await product.update({
+      name: name !== undefined ? name.trim() : product.name,
+      price:
+        price !== undefined && price !== ""
+          ? Number(price)
+          : product.price,
+      stock: stock !== undefined ? Number(stock) : product.stock,
+      low_stock_alert:
+        low_stock_alert !== undefined && low_stock_alert !== ""
+          ? Number(low_stock_alert)
+          : product.low_stock_alert,
+      category: category !== undefined ? category : product.category,
+      weight:
+        weight !== undefined && weight !== ""
+          ? Number(weight)
+          : product.weight,
+      weightUnit: weightUnit || product.weightUnit,
+      pcs: pcs !== undefined ? Number(pcs) : product.pcs,
+      variants: parsedVariants,
+      description:
+        description !== undefined ? description : product.description,
+      image: imagePath,
+      is_active:
+        is_active !== undefined ? Boolean(is_active) : product.is_active,
+    });
 
-    await AddProduct.update(payload, { where: { id: product.id } });
-    const fresh = await AddProduct.findByPk(product.id);
-    res.json(fresh);
+    res.json(product);
   } catch (err) {
-    console.error("updateProduct error:", err);
-    res.status(500).json({ message: "Failed to update" });
+    console.error("updateProduct:", err);
+    res.status(500).json({ error: err.message || "Failed to update product" });
   }
 };
 
-/* ═══════════════════════════════════════════
-   DELETE (soft)
-   ═══════════════════════════════════════════ */
+/* ──────────────────────────────────────────────
+   DELETE /api/products/:id   (admin, soft delete)
+   ────────────────────────────────────────────── */
 exports.deleteProduct = async (req, res) => {
   try {
-    const product = await AddProduct.findOne({ where: { id: req.params.id } });
-    if (!product) return res.status(404).json({ message: "Not found" });
+    const product = await AddProduct.findOne({
+      where: { id: req.params.id, is_delete: false },
+    });
+    if (!product) return res.status(404).json({ error: "Product not found" });
 
-    await AddProduct.update({ is_delete: true }, { where: { id: product.id } });
-    const fresh = await AddProduct.findByPk(product.id);
-    res.json({ message: "Deleted", product: fresh });
+    await product.update({ is_delete: true });
+    res.json({ message: "Product deleted" });
   } catch (err) {
-    console.error("deleteProduct error:", err);
-    res.status(500).json({ message: "Failed to delete" });
+    console.error("deleteProduct:", err);
+    res.status(500).json({ error: "Failed to delete product" });
   }
 };
 
-/* ═══════════════════════════════════════════
-   ADD SINGLE VARIANT
-   ═══════════════════════════════════════════ */
+/* ──────────────────────────────────────────────
+   POST /api/products/:id/variants   (admin)
+   ────────────────────────────────────────────── */
 exports.addVariant = async (req, res) => {
   try {
     const product = await AddProduct.findOne({
       where: { id: req.params.id, is_delete: false },
     });
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) return res.status(404).json({ error: "Product not found" });
 
-    const { weight, weightUnit = "g", price, stock, pcs } = req.body;
+    const variant = req.body;
+    const variants = Array.isArray(product.variants)
+      ? [...product.variants]
+      : [];
+    variants.push(variant);
 
-    if (weight === "" || weight == null || price === "" || price == null) {
-      return res.status(400).json({ message: "Weight and price are required" });
-    }
-
-    let existing = Array.isArray(product.variants) ? [...product.variants] : [];
-
-    if (existing.length === 0 && product.price != null) {
-      existing = [
-        {
-          weight: product.weight ?? null,
-          weightUnit: product.weightUnit ?? "g",
-          price: product.price,
-          stock: product.stock ?? 0,
-          pcs: product.pcs ?? 0,
-        },
-      ];
-    }
-
-    const updated = [
-      ...existing,
-      {
-        weight: Number(weight),
-        weightUnit,
-        price: Number(price),
-        stock: Number(stock) || 0,
-        pcs: pcs != null && pcs !== "" ? Number(pcs) : 0,
-      },
-    ];
-
-    const legacy = legacyFieldsFromVariants(updated);
-
-    await AddProduct.update(
-      {
-        variants: updated,
-        price: legacy.price,
-        weight: legacy.weight,
-        weightUnit: legacy.weightUnit,
-        stock: legacy.stock,
-        pcs: legacy.pcs,
-      },
-      { where: { id: product.id } }
-    );
-
-    const fresh = await AddProduct.findByPk(product.id);
-    res.status(201).json(fresh);
+    await product.update({ variants });
+    res.json(product);
   } catch (err) {
-    console.error("addVariant error:", err);
-    res.status(500).json({ message: "Failed to add variant" });
+    console.error("addVariant:", err);
+    res.status(500).json({ error: "Failed to add variant" });
   }
 };
 
-/* ═══════════════════════════════════════════
-   REMOVE SINGLE VARIANT BY INDEX
-   ═══════════════════════════════════════════ */
+/* ──────────────────────────────────────────────
+   DELETE /api/products/:id/variants/:index   (admin)
+   ────────────────────────────────────────────── */
 exports.removeVariant = async (req, res) => {
   try {
     const product = await AddProduct.findOne({
       where: { id: req.params.id, is_delete: false },
     });
-    if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product) return res.status(404).json({ error: "Product not found" });
 
     const idx = Number(req.params.index);
-    const existing = Array.isArray(product.variants) ? product.variants : [];
+    const variants = Array.isArray(product.variants)
+      ? [...product.variants]
+      : [];
 
-    if (idx < 0 || idx >= existing.length) {
-      return res.status(400).json({ message: "Invalid variant index" });
+    if (idx < 0 || idx >= variants.length) {
+      return res.status(400).json({ error: "Invalid variant index" });
     }
 
-    const updated = existing.filter((_, i) => i !== idx);
-    const legacy = legacyFieldsFromVariants(updated);
-
-    await AddProduct.update(
-      {
-        variants: updated,
-        price: legacy.price,
-        weight: legacy.weight,
-        weightUnit: legacy.weightUnit,
-        stock: legacy.stock,
-        pcs: legacy.pcs,
-      },
-      { where: { id: product.id } }
-    );
-
-    const fresh = await AddProduct.findByPk(product.id);
-    res.json(fresh);
+    variants.splice(idx, 1);
+    await product.update({ variants });
+    res.json(product);
   } catch (err) {
-    console.error("removeVariant error:", err);
-    res.status(500).json({ message: "Failed to remove variant" });
+    console.error("removeVariant:", err);
+    res.status(500).json({ error: "Failed to remove variant" });
   }
 };

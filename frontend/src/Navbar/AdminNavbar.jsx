@@ -6,11 +6,12 @@ import { useAuth } from "../pages/AuthContext";
 import "../Css/AdminNavbar.css";
 
 const NAV_LINKS = [
-  { to: "/dashboard",  label: "Dashboard",    icon: "📊" },
-  { to: "/addproduct", label: "Add Products", icon: "➕" },
-  { to: "/record",     label: "Records",      icon: "📋" },
-  { to: "/order",      label: "Orders",       icon: "📦" },
-  { to: "/customer",   label: "Customers",    icon: "👥" },
+  { to: "/dashboard",           label: "Dashboard",    icon: "📊" },
+  { to: "/addproduct",          label: "Add Products", icon: "➕" },
+  { to: "/record",              label: "Records",      icon: "📋" },
+  { to: "/order",               label: "Orders",       icon: "📦" },
+  { to: "/customer",            label: "Customers",    icon: "👥" },
+  { to: "/admin/company-info",  label: "Company Info", icon: "🏢" }, // 👈 NEW
 ];
 
 const AdminNavbar = () => {
@@ -71,7 +72,11 @@ const AdminNavbar = () => {
       <nav className={`admin-navbar ${menuOpen ? "mobile-open" : ""}`}>
         <div className="nav-wrapper">
           {/* Brand */}
-          <Link to="/dashboard" className="nav-brand" onClick={() => setMenuOpen(false)}>
+          <Link
+            to="/dashboard"
+            className="nav-brand"
+            onClick={() => setMenuOpen(false)}
+          >
             <img src="/images.jpg" alt="Gokul Namkeen" className="logo" />
             <div className="brand-text">
               <span className="brand-name">Gokul Namkeen</span>
@@ -111,7 +116,11 @@ const AdminNavbar = () => {
               </div>
             )}
 
-            <button className="logout-btn" onClick={handleLogout} type="button">
+            <button
+              className="logout-btn"
+              onClick={handleLogout}
+              type="button"
+            >
               <span className="logout-icon">⎋</span>
               <span>Logout</span>
             </button>

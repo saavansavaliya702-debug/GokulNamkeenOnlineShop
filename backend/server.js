@@ -75,6 +75,7 @@ app.use("/api/coupons", require("./routes/couponRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 app.use("/api/admin/orders", require("./routes/adminOrders"));
 app.use("/api/admin/dashboard", require("./routes/adminDashboard"));
+app.use("/api/company-info", require("./routes/companyInfoRoutes"));
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
