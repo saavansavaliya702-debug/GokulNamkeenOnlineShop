@@ -5,7 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import "../Css/login.css";
 
-const API = "http://localhost:7070/api/auth";
+const API = "https://gokulnamkeenonlineshop-backend.onrender.com/api/auth";
 
 const Register = () => {
   const [formData, setFormData] = useState({
