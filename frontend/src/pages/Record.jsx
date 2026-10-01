@@ -4,6 +4,7 @@ import toast, { Toaster } from "react-hot-toast";
 import api from "../utils/api";
 import AdminNavbar from "../Navbar/AdminNavbar";
 import { getImageUrl } from "../utils/image";
+import BackButton from "../components/BackButton";
 import "../Css/Record.css";
 
 const Record = () => {
@@ -333,6 +334,7 @@ const Record = () => {
           {/* Header */}
           <header className="record-header">
             <div className="record-header-left">
+              <BackButton to="/dashboard" />
               <div className="record-header-icon">📋</div>
               <div>
                 <h1>Product Records</h1>

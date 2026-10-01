@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import OrderDetail from "./pages/OrderDetail";
 
@@ -30,7 +31,18 @@ import TrackOrder from "./pages/TrackOrder.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import CustomerPage from "./pages/AdminCustomerPage.jsx";
 import AdminCompanyInfo from "./pages/AdminCompanyInfo";
+import "./Css/Theme.css";
+import "./Css/PremiumTheme.css";
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [pathname]);
+
+  return null;
+}
 
 function App() {
   const [isAuthenticating, setIsAuthenticating] = useState(true);
@@ -47,6 +59,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         {/* Public Routes - Redirect to /worker if already logged in */}
         <Route

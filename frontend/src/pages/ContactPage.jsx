@@ -1,33 +1,93 @@
 // src/pages/Contact.jsx
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import BackButton from "../components/BackButton";
 import toast, { Toaster } from "react-hot-toast";
 import api from "../utils/api";
 import UserNavbar from "../Navbar/UserNavbar";
 import AdminNavbar from "../Navbar/AdminNavbar";
 import { useAuth } from "./AuthContext";
+import useScrollReveal from "../hooks/useScrollReveal";
 import "../Css/contact.css";
 
 const MFG_CARDS = [
+  { icon: "🏭", title: "4 Manufacturing Units", desc: "State-of-the-art facilities with modern machinery and strict quality control." },
+  { icon: "👷", title: "850+ Employees", desc: "Skilled workforce dedicated to maintaining traditional taste with modern hygiene." },
+  { icon: "📦", title: "Daily Production", desc: "Over 45 tonnes of authentic namkeen and snacks produced every day." },
+  { icon: "🌍", title: "Export Ready", desc: "Dedicated export facility near Mundra Port for seamless international shipping." },
+];
+
+// ── NEW: Support channels ──
+const SUPPORT_CHANNELS = [
   {
-    icon: "🏭",
-    title: "4 Manufacturing Units",
-    desc: "State-of-the-art facilities with modern machinery and strict quality control.",
+    icon: "💬",
+    title: "Live Chat",
+    detail: "Mon–Sat, 9 AM – 7 PM IST",
+    action: "Avg. response: 2 minutes",
   },
   {
-    icon: "👷",
-    title: "850+ Employees",
-    desc: "Skilled workforce dedicated to maintaining traditional taste with modern hygiene.",
+    icon: "📧",
+    title: "Email Support",
+    detail: "support@gokulnamkeen.com",
+    action: "Reply within 24 hours",
   },
   {
-    icon: "📦",
-    title: "Daily Production",
-    desc: "Over 45 tonnes of authentic namkeen and snacks produced every day.",
+    icon: "📞",
+    title: "Phone Support",
+    detail: "+91 98765 43210",
+    action: "Mon–Sat, 9 AM – 7 PM IST",
   },
   {
-    icon: "🌍",
-    title: "Export Ready",
-    desc: "Dedicated export facility near Mundra Port for seamless international shipping.",
+    icon: "🤝",
+    title: "Bulk / Wholesale",
+    detail: "wholesale@gokulnamkeen.com",
+    action: "Dedicated B2B desk",
+  },
+];
+
+// ── NEW: FAQ ──
+const FAQS = [
+  {
+    q: "Do you ship internationally?",
+    a: "Yes. We currently export to 18+ countries including USA, Canada, UK, UAE, Saudi Arabia, Singapore and Australia. Contact our export desk for bulk orders.",
+  },
+  {
+    q: "What is the minimum order for wholesale?",
+    a: "For domestic wholesale, the minimum order is 50 kg. For international bulk orders, please reach out to our B2B team for a customized quote.",
+  },
+  {
+    q: "How long does delivery take?",
+    a: "Domestic orders are typically delivered within 3–7 business days. International shipping usually takes 10–21 days depending on the destination.",
+  },
+  {
+    q: "Are your products FSSAI certified?",
+    a: "Absolutely. All our products are FSSAI certified and manufactured in ISO 22000 and HACCP compliant facilities.",
+  },
+  {
+    q: "Can I visit your manufacturing facility?",
+    a: "We welcome scheduled visits for business partners and distributors. Please contact us at least 7 days in advance to arrange a tour.",
+  },
+];
+
+// ── NEW: Office locations ──
+const OFFICES = [
+  {
+    city: "Surat (Head Office)",
+    address: "Mota Varachha, Surat, Gujarat 394101",
+    phone: "+91 98765 43210",
+    hours: "Mon–Sat · 9 AM – 7 PM",
+  },
+  {
+    city: "Mumbai (Regional Office)",
+    address: "Andheri East, Mumbai, Maharashtra 400069",
+    phone: "+91 98765 43211",
+    hours: "Mon–Sat · 10 AM – 6 PM",
+  },
+  {
+    city: "Delhi (North India Hub)",
+    address: "Okhla Industrial Area, New Delhi 110020",
+    phone: "+91 98765 43212",
+    hours: "Mon–Sat · 10 AM – 6 PM",
   },
 ];
 
@@ -50,7 +110,13 @@ const Contact = () => {
   const [company, setCompany] = useState(null);
   const [loadingCompany, setLoadingCompany] = useState(true);
 
+  // ── NEW: FAQ open state ──
+  const [openFaq, setOpenFaq] = useState(0);
+
   const SUBMIT_COOLDOWN = 3000;
+
+  /* Scroll reveal */
+  useScrollReveal(company ? 1 : 0);
 
   useEffect(() => {
     let mounted = true;
@@ -152,38 +218,102 @@ const Contact = () => {
       <Toaster position="top-right" toastOptions={{ duration: 2800 }} />
 
       <div className="contact-page">
-        <div className="contact-container">
-          {/* Back */}
-          <button
-            className="contact-back"
-            onClick={() => navigate(-1)}
-            type="button"
-          >
-            ← Back
-          </button>
+        {/* Floating particles */}
+        <div className="ct-particles" aria-hidden="true">
+          <span /><span /><span /><span /><span /><span />
         </div>
 
-        {/* Hero */}
+        {/* ── Hero ── */}
         <section className="contact-hero">
+          <div className="ct-hero-bg" aria-hidden="true" />
           <div className="contact-hero-inner">
-            <span className="contact-eyebrow">Get in Touch</span>
-            <h1>
+            <BackButton
+              className="contact-back"
+              onClick={() => navigate(-1)}
+            />
+            <span className="contact-eyebrow">
+              <span className="ct-eyebrow-dot" />
+              Get in Touch
+            </span>
+            <h1 className="ct-title">
               Contact <span className="highlight">Us</span>
             </h1>
             <p>
               We would love to hear from you. Reach out for business inquiries,
               partnerships, or any questions about our products.
             </p>
+
+            <div className="ct-hero-actions">
+              <a className="btn ct-btn-primary" href="#contact-form">
+                Send a Message
+              </a>
+              <a className="btn ct-btn-ghost" href="tel:+91">
+                📞 Call Us
+              </a>
+            </div>
+
+            <div className="ct-quick">
+              <div className="ct-quick-item">
+                <span className="ct-quick-icon">⚡</span>
+                <div>
+                  <strong>Fast Response</strong>
+                  <span>Within 24 hours</span>
+                </div>
+              </div>
+              <div className="ct-quick-item">
+                <span className="ct-quick-icon">🏢</span>
+                <div>
+                  <strong>4 Units</strong>
+                  <span>Across Gujarat</span>
+                </div>
+              </div>
+              <div className="ct-quick-item">
+                <span className="ct-quick-icon">🌍</span>
+                <div>
+                  <strong>Export Ready</strong>
+                  <span>Worldwide shipping</span>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* Main grid */}
+        {/* ── NEW: Support channels ── */}
+        <section className="contact-support">
+          <div className="contact-container">
+            <header className="section-head gn-reveal">
+              <span className="section-tag">Support</span>
+              <h2>
+                How Can We <span className="highlight">Help You?</span>
+              </h2>
+              <p className="section-sub">
+                Choose the channel that works best for you — we're here to
+                answer every question.
+              </p>
+            </header>
+
+            <div className="support-grid gn-stagger">
+              {SUPPORT_CHANNELS.map((s) => (
+                <article key={s.title} className="support-card">
+                  <div className="support-icon">{s.icon}</div>
+                  <h3>{s.title}</h3>
+                  <p className="support-detail">{s.detail}</p>
+                  <span className="support-action">{s.action}</span>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Main grid ── */}
         <section className="contact-main">
           <div className="contact-container">
             <div className="contact-grid">
               {/* Company info */}
-              <div className="contact-info">
-                <h2>Company Details</h2>
+              <div className="contact-info gn-reveal from-left">
+                <h2>
+                  <span className="ct-section-icon">🏢</span> Company Details
+                </h2>
 
                 {loadingCompany ? (
                   <p className="info-loading">Loading company details…</p>
@@ -192,7 +322,7 @@ const Contact = () => {
                     Company details are not available.
                   </p>
                 ) : (
-                  <div className="info-list">
+                  <div className="info-list gn-stagger">
                     <div className="info-item">
                       <span className="info-icon">🏢</span>
                       <div>
@@ -251,7 +381,18 @@ const Contact = () => {
                         <span className="info-icon">📞</span>
                         <div>
                           <h4>Phone</h4>
-                          <p>{company.phones.join(" | ")}</p>
+                          <p>
+                            {company.phones.map((p, i) => (
+                              <a
+                                key={i}
+                                href={`tel:${p.replace(/\s+/g, "")}`}
+                                className="ct-link"
+                              >
+                                {p}
+                                {i < company.phones.length - 1 ? " | " : ""}
+                              </a>
+                            ))}
+                          </p>
                         </div>
                       </div>
                     )}
@@ -263,7 +404,9 @@ const Contact = () => {
                           <h4>Email</h4>
                           {company.emails.map((mail, idx) => (
                             <p key={idx}>
-                              <a href={`mailto:${mail}`}>{mail}</a>
+                              <a href={`mailto:${mail}`} className="ct-link">
+                                {mail}
+                              </a>
                             </p>
                           ))}
                         </div>
@@ -280,6 +423,7 @@ const Contact = () => {
                               href={company.website}
                               target="_blank"
                               rel="noopener noreferrer"
+                              className="ct-link"
                             >
                               {company.website}
                             </a>
@@ -289,15 +433,34 @@ const Contact = () => {
                     )}
                   </div>
                 )}
+
+                {/* Map placeholder */}
+                <div className="ct-map">
+                  <div className="ct-map-pin">📍</div>
+                  <div className="ct-map-text">
+                    <strong>Head Office</strong>
+                    <span>Mota Varachha, Surat, Gujarat</span>
+                  </div>
+                </div>
               </div>
 
               {/* Form */}
-              <div className="contact-form-wrap" ref={formBoxRef}>
-                <h2>Send us a Message</h2>
+              <div
+                className="contact-form-wrap gn-reveal from-right"
+                ref={formBoxRef}
+                id="contact-form"
+              >
+                <h2>
+                  <span className="ct-section-icon">✉️</span> Send us a Message
+                </h2>
+                <p className="ct-form-lead">
+                  Fill in the form below and we'll get back to you within 24
+                  hours.
+                </p>
 
                 {success && (
                   <div className="success-banner" role="alert">
-                    ✓ Message sent successfully! We’ll get back to you soon.
+                    ✓ Message sent successfully! We'll get back to you soon.
                   </div>
                 )}
 
@@ -404,11 +567,85 @@ const Contact = () => {
                         Sending...
                       </>
                     ) : (
-                      "Send Message"
+                      <>📨 Send Message</>
                     )}
                   </button>
                 </form>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── NEW: Office locations ── */}
+        <section className="contact-offices">
+          <div className="contact-container">
+            <header className="section-head gn-reveal">
+              <span className="section-tag">Locations</span>
+              <h2>
+                Our <span className="highlight">Offices</span>
+              </h2>
+              <p className="section-sub">
+                Visit us at any of our regional offices across India.
+              </p>
+            </header>
+
+            <div className="offices-grid gn-stagger">
+              {OFFICES.map((o) => (
+                <article key={o.city} className="office-card">
+                  <div className="office-icon">📍</div>
+                  <h3>{o.city}</h3>
+                  <p className="office-address">{o.address}</p>
+                  <p className="office-phone">
+                    <a href={`tel:${o.phone.replace(/\s+/g, "")}`} className="ct-link">
+                      {o.phone}
+                    </a>
+                  </p>
+                  <span className="office-hours">🕐 {o.hours}</span>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── NEW: FAQ ── */}
+        <section className="contact-faq">
+          <div className="contact-container">
+            <header className="section-head gn-reveal">
+              <span className="section-tag">FAQ</span>
+              <h2>
+                Frequently Asked <span className="highlight">Questions</span>
+              </h2>
+              <p className="section-sub">
+                Quick answers to common questions about our products and
+                services.
+              </p>
+            </header>
+
+            <div className="faq-list gn-stagger">
+              {FAQS.map((f, idx) => {
+                const isOpen = openFaq === idx;
+                return (
+                  <div
+                    key={f.q}
+                    className={`faq-item ${isOpen ? "is-open" : ""}`}
+                  >
+                    <button
+                      type="button"
+                      className="faq-question"
+                      onClick={() => setOpenFaq(isOpen ? -1 : idx)}
+                      aria-expanded={isOpen}
+                    >
+                      <span>{f.q}</span>
+                      <span className="faq-toggle" aria-hidden="true">
+                        {isOpen ? "−" : "+"}
+                      </span>
+                    </button>
+                    <div className="faq-answer" hidden={!isOpen}>
+                      <p>{f.a}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -420,7 +657,7 @@ const Contact = () => {
             company.international_partners?.length > 0) && (
             <section className="contact-partners">
               <div className="contact-container">
-                <header className="section-head">
+                <header className="section-head gn-reveal">
                   <span className="section-tag">Partners</span>
                   <h2>
                     Our Investors &{" "}
@@ -428,7 +665,7 @@ const Contact = () => {
                   </h2>
                 </header>
 
-                <div className="partners-grid">
+                <div className="partners-grid gn-stagger">
                   {company.investors?.length > 0 && (
                     <div className="partner-card">
                       <h3>Major Investors</h3>
@@ -467,14 +704,14 @@ const Contact = () => {
         {/* Manufacturing */}
         <section className="contact-mfg">
           <div className="contact-container">
-            <header className="section-head">
+            <header className="section-head gn-reveal">
               <span className="section-tag">Capacity</span>
               <h2>
                 Manufacturing <span className="highlight">Strength</span>
               </h2>
             </header>
 
-            <div className="mfg-grid">
+            <div className="mfg-grid gn-stagger">
               {MFG_CARDS.map((c) => (
                 <article key={c.title} className="mfg-card">
                   <div className="mfg-icon">{c.icon}</div>
@@ -487,10 +724,11 @@ const Contact = () => {
         </section>
 
         {/* CTA */}
-        <section className="contact-cta">
+        <section className="contact-cta gn-reveal">
           <div className="cta-inner">
+            <div className="ct-cta-glow" aria-hidden="true" />
             <h2>
-              Let’s <span className="highlight">Connect</span>
+              Let's <span className="highlight">Connect</span>
             </h2>
             <p>
               Whether you are a distributor, retailer, or customer — we are

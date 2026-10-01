@@ -57,6 +57,11 @@
   flex-wrap: wrap;
 }
 
+.dash-header-text {
+  flex: 1 1 480px;
+  min-width: 0;
+}
+
 .dash-header h1 {
   margin: 0 0 4px;
   font-size: 1.7rem;
@@ -157,7 +162,7 @@
 .dash-stat-card.revenue .dash-stat-icon { background: #dcfce7; }
 .dash-stat-card.orders .dash-stat-icon { background: #dbeafe; }
 .dash-stat-card.products .dash-stat-icon { background: #fef3c7; }
-.dash-stat-card.customers .dash-stat-icon { background: #f3e8ff; }
+.dash-stat-card.customers .dash-stat-icon { background: #d9f1e9; }
 
 .dash-stat-body {
   display: flex;
@@ -597,51 +602,80 @@
 
 /* Quick Actions */
 .dash-actions {
-  max-width: 1280px;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 1440px;
   margin: 0 auto;
+  padding-inline: clamp(18px, 3.2vw, 56px);
 }
 
 .dash-actions h2 {
-  margin: 0 0 16px;
-  font-size: 1.15rem;
+  margin: 0 0 18px;
+  font-size: 1.2rem;
   font-weight: 700;
 }
 
-.actions-grid {
+.dash-page .dash-actions .actions-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-}
-
-@media (max-width: 700px) {
-  .actions-grid { grid-template-columns: repeat(2, 1fr); }
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  gap: clamp(12px, 1.6vw, 20px);
 }
 
 .action-btn {
   display: flex;
+  min-width: 0;
+  min-height: 120px;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  background: white;
-  border: 1.5px solid var(--dash-border);
-  border-radius: var(--dash-radius-sm);
-  padding: 22px 16px;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  border-radius: 18px;
+  padding: 20px 16px;
+  box-shadow:
+    0 10px 28px rgba(30, 67, 49, 0.055),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
   cursor: pointer;
   font-weight: 600;
   font-size: 0.9rem;
   color: var(--dash-text);
   transition: all 0.2s;
+  -webkit-backdrop-filter: blur(16px) saturate(135%);
+  backdrop-filter: blur(16px) saturate(135%);
 }
 
 .action-btn:hover {
-  background: var(--dash-primary-soft);
-  border-color: #86efac;
+  background: rgba(229, 241, 235, 0.92);
+  border-color: rgba(47, 126, 91, 0.24);
   color: var(--dash-primary-dark);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 34px rgba(30, 67, 49, 0.11);
 }
 
 .action-icon {
   font-size: 1.5rem;
+}
+
+@media (max-width: 480px) {
+  .dash-page .dash-actions {
+    padding-inline: 18px;
+  }
+
+  .dash-page .dash-actions .actions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .dash-page .action-btn {
+    min-height: 104px;
+    padding-inline: 10px;
+    font-size: 0.82rem;
+  }
 }
 /* ─── Clickable table rows ─── */
 .dash-row-clickable {

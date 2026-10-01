@@ -1,5 +1,6 @@
 // src/pages/Payment.jsx
 import { useNavigate } from "react-router-dom";
+import BackButton from "../components/BackButton";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import UserNavbar from "../Navbar/UserNavbar";
@@ -552,15 +553,11 @@ const Payment = () => {
 
       <div className="pay-page">
         <div className="pay-container">
-          <button
-            className="pay-back"
-            onClick={() => navigate(-1)}
-            type="button"
-          >
-            ← Back
-          </button>
-
           <header className="pay-header">
+            <BackButton
+              className="pay-back"
+              onClick={() => navigate(-1)}
+            />
             <h1>Secure Checkout</h1>
             <p>Complete your order securely in a few steps</p>
           </header>

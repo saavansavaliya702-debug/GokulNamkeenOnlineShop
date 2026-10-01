@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import api from "../utils/api";
 import AdminNavbar from "../Navbar/AdminNavbar";
+import BackButton from "../components/BackButton";
 import "../Css/AddProduct.css";
 
 const CATEGORIES = [
@@ -185,13 +186,10 @@ const AddProduct = () => {
         <div className="ap-container">
           {/* Header */}
           <div className="ap-header">
-            <button
+            <BackButton
               className="ap-back"
               onClick={() => navigate(-1)}
-              type="button"
-            >
-              ← Back
-            </button>
+            />
             <div className="ap-header-main">
               <div className="ap-header-icon">📦</div>
               <div>

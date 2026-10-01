@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "./AuthContext";
 import AdminNavbar from "../Navbar/AdminNavbar";
+import BackButton from "../components/BackButton";
 import "../Css/product.css";
 
 const CATEGORIES = [
@@ -184,9 +185,10 @@ const AddNamkeenProduct = () => {
         <div className="add-container">
           {/* Header */}
           <div className="add-header">
-            <button className="back-btn" onClick={() => navigate(-1)}>
-              ← Back
-            </button>
+            <BackButton
+              className="back-btn"
+              onClick={() => navigate(-1)}
+            />
             <div className="add-header-text">
               <span className="admin-badge">Admin Panel</span>
               <h1>Add New Product</h1>

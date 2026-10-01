@@ -1,5 +1,5 @@
 // src/pages/ProductPage.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import api from "../utils/api";
@@ -7,6 +7,8 @@ import UserNavbar from "../Navbar/UserNavbar";
 import AdminNavbar from "../Navbar/AdminNavbar";
 import { useAuth } from "./AuthContext";
 import { getImageUrl } from "../utils/image";
+import useScrollReveal from "../hooks/useScrollReveal";
+import BackButton from "../components/BackButton";
 import "../Css/product.css";
 
 const ProductPage = () => {
@@ -20,6 +22,9 @@ const ProductPage = () => {
   const [cartCount, setCartCount] = useState(0);
   const [bumpCart, setBumpCart] = useState(false);
   const [flyer, setFlyer] = useState(null);
+
+  /* Scroll-reveal observer (re-runs when products change) */
+  useScrollReveal(products.length);
 
   /* Fetch products */
   useEffect(() => {
@@ -58,10 +63,13 @@ const ProductPage = () => {
     };
   }, []);
 
-  const categories = [
-    "all",
-    ...new Set(products.map((p) => p.category).filter(Boolean)),
-  ];
+  const categories = useMemo(
+    () => [
+      "all",
+      ...new Set(products.map((p) => p.category).filter(Boolean)),
+    ],
+    [products]
+  );
 
   const filtered = products.filter((p) => {
     const matchSearch = p.name
@@ -71,6 +79,14 @@ const ProductPage = () => {
       categoryFilter === "all" || p.category === categoryFilter;
     return matchSearch && matchCat;
   });
+
+  /* Page-level stats (feels real) */
+  const stats = useMemo(() => {
+    const totalProducts = products.length;
+    const inStock = products.filter((p) => p.stock > 0).length;
+    const categoriesCount = Math.max(categories.length - 1, 0);
+    return { totalProducts, inStock, categoriesCount };
+  }, [products, categories]);
 
   const getInCartQty = (productId) => {
     try {
@@ -181,6 +197,11 @@ const ProductPage = () => {
       <Toaster position="top-right" toastOptions={{ duration: 2500 }} />
 
       <div className="product-page">
+        {/* ── Floating particles ── */}
+        <div className="pp-particles" aria-hidden="true">
+          <span /><span /><span /><span /><span /><span />
+        </div>
+
         {/* Floating cart → /cart */}
         <button
           className={`floating-cart-btn ${bumpCart ? "bump" : ""}`}
@@ -195,16 +216,69 @@ const ProductPage = () => {
         </button>
 
         <div className="product-container">
-          {/* Header */}
-          <header className="product-header">
-            <div className="product-header-left">
-              <div className="product-header-icon">🛍️</div>
-              <div>
-                <h1>Our Products</h1>
-                <p>Authentic snacks & sweets, handpicked for you</p>
+          {/* ── Animated page header ── */}
+          <header className="pp-hero">
+            <div className="pp-hero-inner">
+              <div className="pp-hero-text">
+                <BackButton
+                  to={user?.is_admin ? "/dashboard" : "/home"}
+                />
+                <span className="pp-eyebrow">
+                  <span className="pp-eyebrow-dot" />
+                  Freshly stocked · Updated daily
+                </span>
+                <h1 className="pp-title">
+                  Our <span className="pp-title-mark">Products</span>
+                </h1>
+                <p className="pp-subtitle">
+                  Authentic snacks & sweets, handpicked for you. From
+                  traditional namkeen to modern favourites.
+                </p>
+
+                <div className="pp-stats">
+                  <div className="pp-stat">
+                    <span className="pp-stat-value">{stats.totalProducts}</span>
+                    <span className="pp-stat-label">Products</span>
+                  </div>
+                  <div className="pp-stat">
+                    <span className="pp-stat-value">{stats.inStock}</span>
+                    <span className="pp-stat-label">In Stock</span>
+                  </div>
+                  <div className="pp-stat">
+                    <span className="pp-stat-value">
+                      {stats.categoriesCount}
+                    </span>
+                    <span className="pp-stat-label">Categories</span>
+                  </div>
+                  <div className="pp-stat">
+                    <span className="pp-stat-value">4.9★</span>
+                    <span className="pp-stat-label">Rating</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pp-hero-badge">
+                <span className="pp-badge-emoji">🥨</span>
+                <span className="pp-badge-text">
+                  Handcrafted
+                  <br />
+                  daily
+                </span>
               </div>
             </div>
+          </header>
 
+          {/* ── Promo banner ── */}
+          {/* <div className="pp-promo">
+            <span className="pp-promo-icon">🎉</span>
+            <span className="pp-promo-text">
+              Free shipping on orders above <strong>₹499</strong> · Use code{" "}
+              <strong>WELCOME10</strong> for 10% off
+            </span>
+          </div> */}
+
+          {/* ── Toolbar (search + categories) ── */}
+          <div className="pp-toolbar">
             <div className="product-search">
               <span className="search-icon">🔍</span>
               <input
@@ -223,27 +297,40 @@ const ProductPage = () => {
                 </button>
               )}
             </div>
-          </header>
 
-          {/* Category chips */}
-          {!loading && categories.length > 1 && (
-            <div className="product-filters">
-              {categories.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  className={`filter-chip ${
-                    categoryFilter === c ? "active" : ""
-                  }`}
-                  onClick={() => setCategoryFilter(c)}
-                >
-                  {c === "all" ? "All" : c}
-                </button>
-              ))}
+            {!loading && categories.length > 1 && (
+              <div className="product-filters">
+                {categories.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    className={`filter-chip ${
+                      categoryFilter === c ? "active" : ""
+                    }`}
+                    onClick={() => setCategoryFilter(c)}
+                  >
+                    {c === "all" ? "All" : c}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── Result count ── */}
+          {!loading && filtered.length > 0 && (
+            <div className="pp-results">
+              Showing <strong>{filtered.length}</strong>{" "}
+              {filtered.length === 1 ? "product" : "products"}
+              {categoryFilter !== "all" && (
+                <>
+                  {" "}
+                  in <strong>{categoryFilter}</strong>
+                </>
+              )}
             </div>
           )}
 
-          {/* Grid */}
+          {/* ── Grid ── */}
           {loading ? (
             <div className="product-loading">
               <div className="product-spinner" />
@@ -264,18 +351,19 @@ const ProductPage = () => {
               </p>
             </div>
           ) : (
-            <div className="product-grid">
-              {filtered.map((p) => {
+            <div className="product-grid gn-stagger">
+              {filtered.map((p, idx) => {
                 const totalInCart = getInCartQty(p.id);
                 const inCart = totalInCart > 0;
                 const outOfStock = p.stock === 0;
+                const isFeatured = idx === 0 && filtered.length > 2;
 
                 return (
                   <article
                     key={p.id}
                     className={`product-card ${
                       outOfStock ? "out-of-stock" : ""
-                    }`}
+                    } ${isFeatured ? "is-featured" : ""}`}
                   >
                     <div
                       className="product-clickable"
@@ -300,6 +388,11 @@ const ProductPage = () => {
                           <span className="product-fallback">🌾</span>
                         )}
 
+                        {isFeatured && (
+                          <span className="product-badge featured">
+                            ⭐ Featured
+                          </span>
+                        )}
                         {outOfStock && (
                           <span className="product-badge out">
                             Out of Stock

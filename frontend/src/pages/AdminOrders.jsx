@@ -6,6 +6,7 @@ import api from "../utils/api";
 import AdminNavbar from "../Navbar/AdminNavbar";
 import { getImageUrl } from "../utils/image";
 import { useAuth } from "./AuthContext";
+import BackButton from "../components/BackButton";
 import "../Css/AdminOrders.css";
 
 const ORDER_STATUSES = ["pending", "shipped", "delivered", "cancelled"];
@@ -201,6 +202,7 @@ const AdminOrders = () => {
           {/* Header */}
           <header className="ao-header">
             <div className="ao-header-left">
+              <BackButton to="/dashboard" />
               <div className="ao-header-icon">📦</div>
               <div>
                 <h1>Orders</h1>

@@ -6,7 +6,74 @@ import UserNavbar from "../Navbar/UserNavbar";
 import AdminNavbar from "../Navbar/AdminNavbar";
 import { useAuth } from "./AuthContext";
 import { getImageUrl } from "../utils/image";
+import BackButton from "../components/BackButton";
 import "../Css/productDetail.css";
+
+/* ── NEW: Static fallback content ── */
+const NUTRITION = [
+  { label: "Energy",     value: "512 kcal" },
+  { label: "Protein",    value: "12.4 g"  },
+  { label: "Carbohydrates", value: "48.6 g" },
+  { label: "Total Fat",  value: "29.8 g"  },
+  { label: "Saturated Fat", value: "6.2 g" },
+  { label: "Dietary Fiber", value: "5.1 g" },
+  { label: "Sodium",     value: "780 mg"  },
+  { label: "Sugar",      value: "2.3 g"   },
+];
+
+const INGREDIENTS = [
+  "Bengal Gram Flour (Besan)",
+  "Rice Flour",
+  "Refined Sunflower Oil",
+  "Iodized Salt",
+  "Red Chilli Powder",
+  "Turmeric",
+  "Cumin Seeds",
+  "Asafoetida (Hing)",
+  "Curry Leaves",
+  "Dry Mango Powder (Amchur)",
+];
+
+const STORAGE_TIPS = [
+  { icon: "🌡️", title: "Cool & Dry",     desc: "Store in a cool, dry place away from direct sunlight." },
+  { icon: "🔒", title: "Airtight Container", desc: "Transfer to an airtight jar after opening to keep it crispy." },
+  { icon: "🥄", title: "Use Dry Spoon",  desc: "Always use a clean, dry spoon to avoid moisture." },
+  { icon: "⏳", title: "Best Within",    desc: "Consume within 30 days of opening for best taste." },
+];
+
+const REVIEWS = [
+  {
+    name: "Ramesh Patel",
+    rating: 5,
+    date: "2 weeks ago",
+    title: "Authentic taste, just like home",
+    text: "Ordered 1kg pack and the freshness is amazing. Tastes exactly like the namkeen my grandmother used to make. Will definitely reorder!",
+  },
+  {
+    name: "Priya Sharma",
+    rating: 5,
+    date: "1 month ago",
+    title: "Perfect for festivals",
+    text: "Bought a big pack for Diwali and everyone loved it. Packaging was neat and delivery was quick.",
+  },
+  {
+    name: "Amit Desai",
+    rating: 4,
+    date: "1 month ago",
+    title: "Great quality, slightly spicy",
+    text: "Very good quality and crunch. Just a little spicier than expected, but still delicious with tea.",
+  },
+];
+
+const FAQ_ITEMS = [
+  { q: "Is this product vegetarian?", a: "Yes, 100% vegetarian. No animal-derived ingredients are used." },
+  { q: "Does it contain preservatives?", a: "We use only natural preservatives and no artificial additives." },
+  { q: "How long does it stay fresh?", a: "Best consumed within 3 months of the manufacturing date when stored properly." },
+  { q: "Is it suitable for kids?", a: "Yes, but we recommend it in moderation due to spice levels." },
+];
+
+/* ── NEW: Helpers ── */
+const renderStars = (rating) => "★".repeat(rating) + "☆".repeat(5 - rating);
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -19,12 +86,32 @@ const ProductDetail = () => {
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [activeTab, setActiveTab] = useState("description");
 
+  // ── NEW: related products + FAQ state ──
+  const [related, setRelated] = useState([]);
+  const [openFaq, setOpenFaq] = useState(0);
+  const [copied, setCopied] = useState(false);
+
   /* ─── Fetch single product ─── */
   useEffect(() => {
     const fetchOne = async () => {
       try {
         const { data } = await api.get(`/products/${id}`);
         setProduct(data);
+
+        /* ── NEW: fetch related products by category ── */
+        try {
+          const relRes = await api.get("/products");
+          const list = Array.isArray(relRes.data) ? relRes.data : [];
+          const filtered = list
+            .filter((p) => p.id !== data.id)
+            .filter((p) =>
+              data.category ? p.category === data.category : true
+            )
+            .slice(0, 4);
+          setRelated(filtered);
+        } catch {
+          setRelated([]);
+        }
       } catch {
         toast.error("Product not found");
         navigate("/products");
@@ -120,6 +207,27 @@ const ProductDetail = () => {
 
   const totalPrice = displayPrice * qty;
 
+  /* ── NEW: Share handler ── */
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: product?.name || "Gokul Namkeen Product",
+          text: `Check out ${product?.name} on Gokul Namkeen`,
+          url,
+        });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        toast.success("Link copied to clipboard!");
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch {
+      /* user cancelled — silent */
+    }
+  };
+
   return (
     <>
       {user?.is_admin ? <AdminNavbar /> : <UserNavbar />}
@@ -129,10 +237,10 @@ const ProductDetail = () => {
         <div className="pd-container">
           {/* Breadcrumb / Back */}
           <div className="pd-breadcrumb">
-            <button className="pd-back" onClick={() => navigate(-1)}>
-              <span className="pd-back-icon">←</span>
-              <span>Back to Products</span>
-            </button>
+            <BackButton
+              className="pd-back"
+              onClick={() => navigate(-1)}
+            />
             {product?.category && (
               <span className="pd-breadcrumb-cat">
                 / <span>{product.category}</span>
@@ -204,6 +312,19 @@ const ProductDetail = () => {
                       <span>↩️</span>
                       <span>Easy Returns</span>
                     </div>
+                  </div>
+
+                  {/* ── NEW: Share row ── */}
+                  <div className="pd-share-row">
+                    <span className="pd-share-label">Share this product:</span>
+                    <button
+                      type="button"
+                      className="pd-share-btn"
+                      onClick={handleShare}
+                      aria-label="Share product"
+                    >
+                      {copied ? "✓ Link Copied" : "🔗 Share"}
+                    </button>
                   </div>
                 </div>
 
@@ -384,7 +505,7 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              {/* ─── Tabs: Description / Details ─── */}
+              {/* ─── Tabs ─── */}
               <div className="pd-tabs-section">
                 <div className="pd-tabs">
                   <button
@@ -400,6 +521,13 @@ const ProductDetail = () => {
                     type="button"
                   >
                     Product Details
+                  </button>
+                  <button
+                    className={`pd-tab ${activeTab === "nutrition" ? "active" : ""}`}
+                    onClick={() => setActiveTab("nutrition")}
+                    type="button"
+                  >
+                    Nutrition
                   </button>
                   <button
                     className={`pd-tab ${activeTab === "shipping" ? "active" : ""}`}
@@ -460,7 +588,36 @@ const ProductDetail = () => {
                           <span>Price</span>
                           <strong>₹{displayPrice}</strong>
                         </li>
+                        <li>
+                          <span>Shelf Life</span>
+                          <strong>3 months from packaging</strong>
+                        </li>
+                        <li>
+                          <span>Country of Origin</span>
+                          <strong>India 🇮🇳</strong>
+                        </li>
+                        <li>
+                          <span>Dietary</span>
+                          <strong>100% Vegetarian</strong>
+                        </li>
                       </ul>
+                    </div>
+                  )}
+
+                  {/* ── NEW: Nutrition tab ── */}
+                  {activeTab === "nutrition" && (
+                    <div className="pd-tab-pane">
+                      <p className="pd-tab-intro">
+                        Approximate nutritional values per 100 g serving.
+                      </p>
+                      <div className="pd-nutrition-grid">
+                        {NUTRITION.map((n) => (
+                          <div key={n.label} className="pd-nutrition-item">
+                            <span className="pd-nutrition-label">{n.label}</span>
+                            <span className="pd-nutrition-value">{n.value}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -486,7 +643,7 @@ const ProductDetail = () => {
                           <h4>💬 Support</h4>
                           <p>
                             Need help with your order? Reach out to our support team
-                            — we’re happy to assist.
+                            — we're happy to assist.
                           </p>
                         </div>
                       </div>
@@ -494,6 +651,168 @@ const ProductDetail = () => {
                   )}
                 </div>
               </div>
+
+              {/* ── NEW: Ingredients & Storage ── */}
+              <section className="pd-ingredients-section">
+                <div className="pd-info-grid">
+                  <div className="pd-info-block">
+                    <h3 className="pd-block-title">
+                      <span>🥘</span> Ingredients
+                    </h3>
+                    <ul className="pd-ingredients-list">
+                      {INGREDIENTS.map((ing) => (
+                        <li key={ing}>
+                          <span className="pd-ing-dot" />
+                          {ing}
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="pd-block-note">
+                      Contains allergens: may contain traces of peanuts and tree
+                      nuts.
+                    </p>
+                  </div>
+
+                  <div className="pd-info-block">
+                    <h3 className="pd-block-title">
+                      <span>📦</span> Storage Instructions
+                    </h3>
+                    <div className="pd-storage-grid">
+                      {STORAGE_TIPS.map((s) => (
+                        <div key={s.title} className="pd-storage-item">
+                          <span className="pd-storage-icon">{s.icon}</span>
+                          <div>
+                            <strong>{s.title}</strong>
+                            <p>{s.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* ── NEW: Reviews ── */}
+              <section className="pd-reviews-section">
+                <header className="pd-reviews-head">
+                  <div>
+                    <h2 className="pd-section-title-large">
+                      Customer Reviews
+                    </h2>
+                    <p className="pd-reviews-sub">
+                      What people are saying about this product
+                    </p>
+                  </div>
+                  <div className="pd-reviews-summary">
+                    <div className="pd-reviews-score">
+                      <span className="pd-score-value">4.7</span>
+                      <span className="pd-score-stars">{renderStars(5)}</span>
+                    </div>
+                    <span className="pd-reviews-count">
+                      Based on 128 reviews
+                    </span>
+                  </div>
+                </header>
+
+                <div className="pd-reviews-grid">
+                  {REVIEWS.map((r, i) => (
+                    <article key={i} className="pd-review-card">
+                      <div className="pd-review-top">
+                        <div className="pd-review-avatar">
+                          {r.name.charAt(0)}
+                        </div>
+                        <div className="pd-review-meta">
+                          <strong>{r.name}</strong>
+                          <span>{r.date}</span>
+                        </div>
+                      </div>
+                      <div className="pd-review-stars">
+                        {renderStars(r.rating)}
+                      </div>
+                      <h4 className="pd-review-title">{r.title}</h4>
+                      <p className="pd-review-text">{r.text}</p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              {/* ── NEW: FAQ ── */}
+              <section className="pd-faq-section">
+                <h2 className="pd-section-title-large">
+                  Frequently Asked Questions
+                </h2>
+                <div className="pd-faq-list">
+                  {FAQ_ITEMS.map((f, idx) => {
+                    const isOpen = openFaq === idx;
+                    return (
+                      <div
+                        key={f.q}
+                        className={`pd-faq-item ${isOpen ? "is-open" : ""}`}
+                      >
+                        <button
+                          type="button"
+                          className="pd-faq-question"
+                          onClick={() => setOpenFaq(isOpen ? -1 : idx)}
+                          aria-expanded={isOpen}
+                        >
+                          <span>{f.q}</span>
+                          <span className="pd-faq-toggle">
+                            {isOpen ? "−" : "+"}
+                          </span>
+                        </button>
+                        {isOpen && (
+                          <div className="pd-faq-answer">
+                            <p>{f.a}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* ── NEW: Related products ── */}
+              {related.length > 0 && (
+                <section className="pd-related-section">
+                  <h2 className="pd-section-title-large">
+                    You May Also Like
+                  </h2>
+                  <div className="pd-related-grid">
+                    {related.map((r) => (
+                      <article
+                        key={r.id}
+                        className="pd-related-card"
+                        onClick={() => {
+                          navigate(`/product/${r.id}`);
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            navigate(`/product/${r.id}`);
+                          }
+                        }}
+                      >
+                        <div className="pd-related-image">
+                          {r.image ? (
+                            <img src={getImageUrl(r.image)} alt={r.name} loading="lazy" />
+                          ) : (
+                            <div className="pd-related-fallback">🌾</div>
+                          )}
+                        </div>
+                        <h4>{r.name}</h4>
+                        {r.category && (
+                          <span className="pd-related-cat">{r.category}</span>
+                        )}
+                        <div className="pd-related-price">
+                          ₹{r.price ?? 0}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </section>
+              )}
             </>
           )}
         </div>

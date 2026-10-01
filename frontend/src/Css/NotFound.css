@@ -56,7 +56,7 @@
   height: 420px;
   top: 40%;
   left: 55%;
-  background: radial-gradient(circle, #a855f7 0%, transparent 65%);
+  background: radial-gradient(circle, #c8794e 0%, transparent 65%);
   animation: nfDrift3 26s ease-in-out infinite;
 }
 
@@ -173,7 +173,7 @@
   border-radius: 50%;
   border: 0.06em solid transparent;
   background:
-    conic-gradient(from 0deg, #6ee7b7, #3b82f6, #a855f7, #6ee7b7)
+    conic-gradient(from 0deg, #6ee7b7, #3b82f6, #c8794e, #6ee7b7)
       border-box;
   -webkit-mask:
     linear-gradient(#000 0 0) padding-box,

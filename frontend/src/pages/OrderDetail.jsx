@@ -5,6 +5,7 @@ import toast, { Toaster } from "react-hot-toast";
 import api from "../utils/api";
 import AdminNavbar from "../Navbar/AdminNavbar";
 import { getImageUrl } from "../utils/image";
+import BackButton from "../components/BackButton";
 import "../Css/OrderDetail.css";
 
 const ORDER_STATUSES = ["pending", "shipped", "delivered", "cancelled"];
@@ -92,12 +93,10 @@ const OrderDetail = () => {
           <div className="od-empty">
             <div className="empty-icon">📭</div>
             <h3>Order not found</h3>
-            <button
+            <BackButton
               className="od-btn od-btn-secondary"
               onClick={() => navigate(-1)}
-            >
-              ← Go back
-            </button>
+            />
           </div>
         </div>
       </>
@@ -115,13 +114,10 @@ const OrderDetail = () => {
         <div className="od-container">
           {/* Header */}
           <header className="od-header">
-            <button
+            <BackButton
               className="od-back"
               onClick={() => navigate(-1)}
-              type="button"
-            >
-              ← Back
-            </button>
+            />
             <div className="od-header-main">
               <div className="od-header-icon">📦</div>
               <div>

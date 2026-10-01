@@ -5,6 +5,7 @@ import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import AdminNavbar from "../Navbar/AdminNavbar";
 import { useAuth } from "./AuthContext";
+import BackButton from "../components/BackButton";
 import "../Css/AdminCustomerPage.css";
 
 const API = "https://gokulnamkeenonlineshop-backend.onrender.com/api/admin";
@@ -205,6 +206,7 @@ export default function AdminCustomerPage() {
           {/* Header */}
           <header className="acp-header">
             <div className="acp-header-left">
+              <BackButton to="/dashboard" />
               <div className="acp-header-icon">👥</div>
               <div>
                 <h1>Customer Dashboard</h1>

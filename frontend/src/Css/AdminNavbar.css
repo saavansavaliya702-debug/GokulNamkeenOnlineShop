@@ -332,3 +332,71 @@
     display: none !important;
   }
 }
+
+.admin-navbar .nav-user-area .user-chip {
+  border-color: rgba(11, 95, 86, 0.16);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow:
+    0 4px 14px rgba(28, 43, 39, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.admin-navbar .nav-user-area .user-chip .user-name {
+  color: #202432;
+  font-weight: 700;
+  transition: color 180ms ease;
+}
+
+.admin-navbar .nav-user-area .user-chip .user-role {
+  color: #697087;
+  transition: color 180ms ease;
+}
+
+.admin-navbar .nav-user-area .user-chip .user-avatar {
+  color: #fff;
+  background: linear-gradient(135deg, #159b88, #087568);
+  box-shadow: 0 3px 10px rgba(11, 128, 116, 0.2);
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms ease;
+}
+
+.admin-navbar .nav-user-area .user-chip:hover,
+.admin-navbar .nav-user-area .user-chip:focus-within {
+  transform: translateY(-2px);
+  border-color: rgba(11, 128, 116, 0.34);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow:
+    0 10px 24px rgba(7, 88, 77, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
+}
+
+.admin-navbar .nav-user-area .user-chip:hover .user-name,
+.admin-navbar .nav-user-area .user-chip:focus-within .user-name {
+  color: #075f57;
+}
+
+.admin-navbar .nav-user-area .user-chip:hover .user-role,
+.admin-navbar .nav-user-area .user-chip:focus-within .user-role {
+  color: #087568;
+}
+
+.admin-navbar .nav-user-area .user-chip:hover .user-avatar,
+.admin-navbar .nav-user-area .user-chip:focus-within .user-avatar {
+  transform: scale(1.06);
+  box-shadow: 0 5px 14px rgba(11, 128, 116, 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-navbar .nav-user-area .user-chip,
+  .admin-navbar .nav-user-area .user-chip .user-name,
+  .admin-navbar .nav-user-area .user-chip .user-role,
+  .admin-navbar .nav-user-area .user-chip .user-avatar {
+    transition: none;
+  }
+}

@@ -8,54 +8,78 @@ import UserNavbar from "../Navbar/UserNavbar";
 import { useAuth } from "./AuthContext";
 import Loading from "./Loading";
 import { getImageUrl } from "../utils/image";
+import useScrollReveal from "../hooks/useScrollReveal";
 
 /* ─── Static content ─── */
 const FEATURES = [
-  {
-    icon: "🍔",
-    title: "Authentic Taste",
-    desc: "Made with traditional recipes passed down for generations.",
-  },
-  {
-    icon: "✨",
-    title: "Premium Quality",
-    desc: "Only the finest ingredients sourced from trusted suppliers.",
-  },
-  {
-    icon: "🚚",
-    title: "Fast Delivery",
-    desc: "Quick and reliable shipping straight to your doorstep.",
-  },
-  {
-    icon: "💚",
-    title: "Healthy Choice",
-    desc: "No artificial flavors or harmful preservatives.",
-  },
+  { icon: "🍔", title: "Authentic Taste", desc: "Made with traditional recipes passed down for generations." },
+  { icon: "✨", title: "Premium Quality", desc: "Only the finest ingredients sourced from trusted suppliers." },
+  { icon: "🚚", title: "Fast Delivery", desc: "Quick and reliable shipping straight to your doorstep." },
+  { icon: "💚", title: "Healthy Choice", desc: "No artificial flavors or harmful preservatives." },
 ];
 
 const STATS = [
-  { value: "20+", label: "Years of Excellence" },
-  { value: "50K+", label: "Happy Customers" },
-  { value: "100+", label: "Authentic Recipes" },
-  { value: "4.9★", label: "Average Rating" },
+  { value: "20+",  count: 20,    suffix: "+",  label: "Years of Excellence" },
+  { value: "50K+", count: 50000, suffix: "K+", label: "Happy Customers" },
+  { value: "100+", count: 100,   suffix: "+",  label: "Authentic Recipes" },
+  { value: "4.9★", count: 4,     suffix: ".9★", label: "Average Rating" },
+];
+
+const MARQUEE_ITEMS = [
+  "Handcrafted Daily",
+  "No Preservatives",
+  "Made in Surat",
+  "Free Shipping ₹499+",
+  "Family Owned Since 2004",
+  "100% Authentic Recipes",
 ];
 
 const TESTIMONIALS = [
-  {
-    name: "Priya Sharma",
-    role: "Regular Customer",
-    text: "Amazing taste! Just like my grandmother used to make. The quality is unmatched.",
-  },
-  {
-    name: "Rajesh Patel",
-    role: "Surat",
-    text: "Best quality snacks I've ever had. Fresh packaging and always on time delivery.",
-  },
-  {
-    name: "Neha Gupta",
-    role: "Verified Buyer",
-    text: "Fast delivery and amazing taste. My family orders every month. Highly recommended!",
-  },
+  { name: "Priya Sharma", role: "Regular Customer", city: "Ahmedabad", initial: "P", color: "#f59e0b",
+    text: "Amazing taste! Just like my grandmother used to make. The quality is unmatched and delivery is always on time." },
+  { name: "Rajesh Patel", role: "Verified Buyer", city: "Surat", initial: "R", color: "#16a34a",
+    text: "Best quality snacks I've ever had. Fresh packaging and always on time delivery. My family loves the sev." },
+  { name: "Neha Gupta", role: "Loyal Customer", city: "Mumbai", initial: "N", color: "#3b82f6",
+    text: "Fast delivery and amazing taste. My family orders every month. Highly recommended for anyone who loves authentic namkeen!" },
+];
+
+/* NEW SECTIONS DATA */
+const PROCESS_STEPS = [
+  { step: "01", icon: "🌾", title: "Sourced Fresh", desc: "We hand-pick premium ingredients from local farms and trusted suppliers across Gujarat." },
+  { step: "02", icon: "👨‍🍳", title: "Handcrafted", desc: "Our master chefs use age-old recipes passed down through 3 generations." },
+  { step: "03", icon: "📦", title: "Sealed Fresh", desc: "Every pack is vacuum-sealed within hours to lock in the crunch and aroma." },
+  { step: "04", icon: "🚚", title: "Delivered Fast", desc: "Dispatched same-day and delivered to your doorstep in 2–4 days." },
+];
+
+const TRUST_BADGES = [
+  { icon: "🏆", title: "FSSAI Certified", sub: "Lic. No. 10023456789" },
+  { icon: "🌱", title: "100% Vegetarian", sub: "Pure veg facility" },
+  { icon: "🔒", title: "Secure Payments", sub: "SSL encrypted" },
+  { icon: "↩️", title: "Easy Returns", sub: "7-day policy" },
+];
+
+const FAQS = [
+  { q: "How long does delivery take?", a: "Orders are dispatched same-day and typically delivered within 2–4 business days across India. Metro cities often receive within 48 hours." },
+  { q: "Are your products preservative-free?", a: "Yes! We use zero artificial preservatives, colors, or flavors. Our vacuum-sealed packaging keeps everything fresh naturally." },
+  { q: "Do you offer bulk / wholesale orders?", a: "Absolutely. For orders above 5kg or corporate gifting, email us at support@gokulnamkeen.com and we'll send a custom quote." },
+  { q: "What payment methods do you accept?", a: "We accept UPI, credit/debit cards, net banking, and Cash on Delivery for orders below ₹5,000." },
+  { q: "Can I return a product?", a: "Yes — if the seal is intact and you notify us within 7 days of delivery, we'll issue a full refund or replacement." },
+];
+
+const AWARDS = [
+  { year: "2024", title: "Best Regional Snack Brand", org: "Gujarat Food Awards" },
+  { year: "2023", title: "Top Rated by 10K+ Families", org: "Trustpilot India" },
+  { year: "2022", title: "Excellence in Traditional Foods", org: "FICCI Gujarat" },
+  { year: "2021", title: "Fastest Growing FMCG Brand", org: "Business Today" },
+];
+
+const INSTAGRAM_POSTS = [
+  { emoji: "🥨", likes: "2.4K", tag: "#Namkeen" },
+  { emoji: "🍿", likes: "1.8K", tag: "#Fresh" },
+  { emoji: "🌶️", likes: "3.1K", tag: "#Spicy" },
+  { emoji: "🧡", likes: "1.5K", tag: "#Snacks" },
+  { emoji: "✨", likes: "2.9K", tag: "#Handmade" },
+  { emoji: "🎁", likes: "1.2K", tag: "#Gifting" },
 ];
 
 const Home = () => {
@@ -64,12 +88,16 @@ const Home = () => {
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(true);
   const [company, setCompany] = useState(null);
+  const [openFaq, setOpenFaq] = useState(0);
 
-  /* ─── Fetch products ─── */
+  /* ─── Slide-reveal observer ─── */
+  useScrollReveal(products.length);
+
+  /* ─── Fetch products (limit 4) ─── */
   useEffect(() => {
     setProductsLoading(true);
     api
-      .get("/products?limit=6")
+      .get("/products?limit=4")
       .then(({ data }) => setProducts(Array.isArray(data) ? data : []))
       .catch((err) =>
         console.error("products fetch:", err.response?.status, err.message)
@@ -93,7 +121,6 @@ const Home = () => {
   const goToProduct = (id) => navigate(`/product/${id}`);
   const formatPrice = (n) => Number(n || 0).toLocaleString("en-IN");
 
-  /* ─── Derived company data ─── */
   const companyName = company?.name || "Gokul Namkeen";
   const companyFounder = company?.founder || "";
   const companyTagline = company?.tagline || "Authentic since 2004";
@@ -101,18 +128,12 @@ const Home = () => {
 
   const primaryPhone = company?.phones?.[0] || "";
   const primaryEmail = company?.emails?.[0] || "";
-  const website = company?.website || "";
   const address = company?.address_street
-    ? [
-        company.address_street,
-        company.address_city,
-        company.address_state,
-      ]
+    ? [company.address_street, company.address_city, company.address_state]
         .filter(Boolean)
         .join(", ")
     : "";
 
-  /* ─── Contact cards (dynamic) ─── */
   const CONTACT_CARDS = [
     {
       icon: "📍",
@@ -120,16 +141,12 @@ const Home = () => {
       lines: company
         ? [
             company.address_street || "—",
-            [company.address_city, company.address_state]
-              .filter(Boolean)
-              .join(", "),
+            [company.address_city, company.address_state].filter(Boolean).join(", "),
           ].filter(Boolean)
         : ["Mota Varachha", "Surat, Gujarat 395001"],
       action: {
         label: "Get Directions →",
-        href: `https://maps.google.com/?q=${encodeURIComponent(
-          address || "Mota Varachha Surat"
-        )}`,
+        href: `https://maps.google.com/?q=${encodeURIComponent(address || "Mota Varachha Surat")}`,
       },
     },
     {
@@ -157,17 +174,30 @@ const Home = () => {
       {user?.is_admin ? <AdminNavbar /> : <UserNavbar />}
 
       <main className='home-container'>
+        {/* ─── ANNOUNCEMENT BAR ─── */}
+        <div className="gn-announce">
+          <span>🎉 Free shipping on orders above ₹499</span>
+          <span className="gn-announce-sep">•</span>
+          <span>New customers get 10% off with code <strong>WELCOME10</strong></span>
+        </div>
+
         {/* ─── HERO ─── */}
         <section id='home' className='hero'>
           <div className='hero-bg' aria-hidden='true' />
+
+          <div className='gn-particles' aria-hidden='true'>
+            <span /><span /><span /><span /><span /><span />
+          </div>
+
           <div className='hero-inner'>
             <div className='hero-content'>
               <span className='hero-eyebrow'>
                 <span className='hero-eyebrow-dot' /> {companyTagline}
               </span>
-              <h1>
-                Welcome to{" "}
-                <span className='brand-highlight'>{companyName}</span>
+              <h1 className='hero-title'>
+                <span className='gn-word'>Welcome</span>{" "}
+                <span className='gn-word'>to</span>{" "}
+                <span className='gn-word brand-highlight'>{companyName}</span>
               </h1>
               <p className='hero-subtitle'>
                 {companyDescription ||
@@ -185,22 +215,44 @@ const Home = () => {
                 <span>⭐ 4.9 Rating</span>
                 <span>•</span>
                 <span>50,000+ Happy Customers</span>
+                <span>•</span>
+                <span>FSSAI Certified</span>
               </div>
             </div>
 
             <div className='hero-image-wrap'>
               <div className='hero-image'>
-                <img
-                  src='/images.jpg'
-                  alt={`${companyName} assortment`}
-                  loading='eager'
-                />
+                <img src='/images.jpg' alt={`${companyName} assortment`} loading='eager' />
               </div>
               <div className='hero-badge'>
                 <span className='hero-badge-value'>20+</span>
                 <span className='hero-badge-label'>Years of Trust</span>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* ─── MARQUEE ─── */}
+        <div className='gn-marquee' aria-hidden='true'>
+          <div className='gn-marquee-track'>
+            {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item, i) => (
+              <span key={i}>{item}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* ─── TRUST BADGES ─── */}
+        <section className='gn-trust-strip'>
+          <div className='gn-trust-grid gn-stagger'>
+            {TRUST_BADGES.map((b) => (
+              <div className='gn-trust-card' key={b.title}>
+                <span className='gn-trust-icon' aria-hidden='true'>{b.icon}</span>
+                <div>
+                  <strong>{b.title}</strong>
+                  <span>{b.sub}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -227,11 +279,16 @@ const Home = () => {
         )}
 
         {/* ─── STATS ─── */}
-        <section className='stats'>
+        <section className='stats gn-reveal'>
           <div className='stats-grid'>
             {STATS.map((s) => (
               <div className='stat-item' key={s.label}>
-                <span className='stat-value'>{s.value}</span>
+                <span
+                  className='stat-value'
+                  data-count={s.count}
+                  data-suffix={s.suffix}>
+                  {s.value}
+                </span>
                 <span className='stat-label'>{s.label}</span>
               </div>
             ))}
@@ -240,22 +297,19 @@ const Home = () => {
 
         {/* ─── FEATURES ─── */}
         <section className='features'>
-          <header className='section-head'>
+          <header className='section-head gn-reveal'>
             <span className='section-tag'>Why Us</span>
             <h2>
               Why <span className='title-highlight'>Choose Us?</span>
             </h2>
             <p className='section-sub'>
-              Four reasons families across Gujarat trust {companyName} every
-              day.
+              Four reasons families across Gujarat trust {companyName} every day.
             </p>
           </header>
-          <div className='features-grid'>
+          <div className='features-grid gn-stagger'>
             {FEATURES.map((f) => (
               <article className='feature-card' key={f.title}>
-                <div className='feature-icon' aria-hidden='true'>
-                  {f.icon}
-                </div>
+                <div className='feature-icon' aria-hidden='true'>{f.icon}</div>
                 <h3>{f.title}</h3>
                 <p>{f.desc}</p>
               </article>
@@ -263,9 +317,32 @@ const Home = () => {
           </div>
         </section>
 
+        {/* ─── HOW IT WORKS ─── */}
+        <section className='gn-process'>
+          <header className='section-head section-head-center gn-reveal'>
+            <span className='section-tag'>Our Process</span>
+            <h2>
+              From Farm to <span className='title-highlight'>Your Doorstep</span>
+            </h2>
+            <p className='section-sub'>
+              Every pack goes through four careful steps before it reaches you.
+            </p>
+          </header>
+          <div className='gn-process-grid gn-stagger'>
+            {PROCESS_STEPS.map((s) => (
+              <div className='gn-process-card' key={s.step}>
+                <span className='gn-process-step'>{s.step}</span>
+                <span className='gn-process-icon' aria-hidden='true'>{s.icon}</span>
+                <h3>{s.title}</h3>
+                <p>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* ─── PRODUCTS ─── */}
         <section id='products' className='products'>
-          <header className='section-head'>
+          <header className='section-head gn-reveal'>
             <div>
               <span className='section-tag'>Bestsellers</span>
               <h2>
@@ -276,10 +353,7 @@ const Home = () => {
               </p>
             </div>
             {products.length > 0 && (
-              <button
-                className='btn btn-ghost'
-                onClick={goToProducts}
-                type='button'>
+              <button className='btn btn-ghost' onClick={goToProducts} type='button'>
                 View all →
               </button>
             )}
@@ -295,24 +369,19 @@ const Home = () => {
               <span className='empty-emoji'>🥨</span>
               <h3>No products yet</h3>
               <p>Check back soon for our latest offerings.</p>
-              <button
-                className='btn btn-primary'
-                onClick={goToProducts}
-                type='button'>
+              <button className='btn btn-primary' onClick={goToProducts} type='button'>
                 Browse All Products
               </button>
             </div>
           ) : (
             <>
-              <div className='products-grid product-page-style'>
-                {products.slice(0, 8).map((p) => {
+              <div className='products-grid gn-stagger'>
+                {products.slice(0, 4).map((p) => {
                   const outOfStock = p.stock === 0;
                   return (
                     <article
                       key={p.id}
-                      className={`product-card ${
-                        outOfStock ? "out-of-stock" : ""
-                      }`}>
+                      className={`product-card ${outOfStock ? "out-of-stock" : ""}`}>
                       <div
                         className='product-clickable'
                         onClick={() => goToProduct(p.id)}
@@ -343,28 +412,20 @@ const Home = () => {
                           )}
 
                           {outOfStock && (
-                            <span className='product-badge out'>
-                              Out of Stock
-                            </span>
+                            <span className='product-badge out'>Out of Stock</span>
                           )}
                           {!outOfStock && p.stock > 0 && p.stock < 10 && (
-                            <span className='product-badge low'>
-                              Only {p.stock} left
-                            </span>
+                            <span className='product-badge low'>Only {p.stock} left</span>
                           )}
                         </div>
 
                         <div className='product-body'>
                           {p.category && (
-                            <span className='product-category'>
-                              {p.category}
-                            </span>
+                            <span className='product-category'>{p.category}</span>
                           )}
                           <h3 className='product-title'>{p.name}</h3>
                           <div className='product-meta'>
-                            <span className='product-price'>
-                              ₹{formatPrice(p.price)}
-                            </span>
+                            <span className='product-price'>₹{formatPrice(p.price)}</span>
                             <div className='product-tags'>
                               {p.weight != null && p.weight !== "" && (
                                 <span className='tag weight'>
@@ -397,12 +458,9 @@ const Home = () => {
                 })}
               </div>
 
-              {products.length >= 6 && (
+              {products.length > 4 && (
                 <div className='products-more'>
-                  <button
-                    className='btn btn-ghost'
-                    onClick={goToProducts}
-                    type='button'>
+                  <button className='btn btn-ghost' onClick={goToProducts} type='button'>
                     View all products →
                   </button>
                 </div>
@@ -413,7 +471,7 @@ const Home = () => {
 
         {/* ─── TESTIMONIALS ─── */}
         <section className='testimonials'>
-          <header className='section-head section-head-center'>
+          <header className='section-head section-head-center gn-reveal'>
             <span className='section-tag'>Reviews</span>
             <h2>
               What Our Customers <span className='title-highlight'>Say</span>
@@ -422,32 +480,62 @@ const Home = () => {
               Real stories from families who love {companyName}.
             </p>
           </header>
-          <div className='testimonials-grid'>
+          <div className='testimonials-grid gn-stagger'>
             {TESTIMONIALS.map((t) => (
               <blockquote className='testimonial-card' key={t.name}>
-                <div className='stars' aria-label='5 out of 5 stars'>
-                  ★★★★★
-                </div>
+                <div className='stars' aria-label='5 out of 5 stars'>★★★★★</div>
                 <p>"{t.text}"</p>
                 <footer>
-                  <cite>— {t.name}</cite>
-                  {t.role && <span className='testimonial-role'>{t.role}</span>}
+                  <div className='gn-avatar-row'>
+                    <span
+                      className='gn-avatar'
+                      style={{ background: t.color }}>
+                      {t.initial}
+                    </span>
+                    <div>
+                      <cite>— {t.name}</cite>
+                      {t.role && (
+                        <span className='testimonial-role'>
+                          {t.role} · {t.city}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </footer>
               </blockquote>
             ))}
           </div>
         </section>
 
+        {/* ─── AWARDS ─── */}
+        <section className='gn-awards'>
+          <header className='section-head section-head-center gn-reveal'>
+            <span className='section-tag'>Recognition</span>
+            <h2>
+              Awards & <span className='title-highlight'>Milestones</span>
+            </h2>
+          </header>
+          <div className='gn-awards-grid gn-stagger'>
+            {AWARDS.map((a) => (
+              <div className='gn-award-card' key={a.title}>
+                <span className='gn-award-year'>{a.year}</span>
+                <h3>{a.title}</h3>
+                <p>{a.org}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* ─── ABOUT ─── */}
         <section id='about' className='about'>
-          <header className='section-head'>
+          <header className='section-head gn-reveal'>
             <span className='section-tag'>Our Story</span>
             <h2>
               About <span className='title-highlight'>{companyName}</span>
             </h2>
           </header>
           <div className='about-content'>
-            <div className='about-text'>
+            <div className='about-text gn-reveal from-left'>
               <p className='about-lead'>
                 {companyDescription ||
                   `With over 20 years of experience, ${companyName} has been serving authentic traditional snacks and sweets to families across the region.`}
@@ -459,73 +547,125 @@ const Home = () => {
                 passed down through generations.
                 {companyFounder && (
                   <>
-                    {" "}
-                    Founded and led by <strong>{companyFounder}</strong>.
+                    {" "}Founded and led by <strong>{companyFounder}</strong>.
                   </>
                 )}
               </p>
               <ul className='about-list'>
-                <li>
-                  <span className='about-check'>✓</span> 20+ Years of Experience
-                </li>
-                <li>
-                  <span className='about-check'>✓</span> 100% Authentic Recipes
-                </li>
-                <li>
-                  <span className='about-check'>✓</span> Premium Quality
-                  Ingredients
-                </li>
-                <li>
-                  <span className='about-check'>✓</span> Trusted by Thousands of
-                  Families
-                </li>
+                <li><span className='about-check'>✓</span> 20+ Years of Experience</li>
+                <li><span className='about-check'>✓</span> 100% Authentic Recipes</li>
+                <li><span className='about-check'>✓</span> Premium Quality Ingredients</li>
+                <li><span className='about-check'>✓</span> Trusted by Thousands of Families</li>
               </ul>
               <button className='btn btn-primary' onClick={goToProducts}>
                 Explore Our Range
               </button>
             </div>
-            <div className='about-image'>
-              <img
-                src='/images.jpg'
-                alt={`About ${companyName}`}
-                loading='lazy'
-              />
-              <div className='about-image-overlay'>
-                <span>Est. 2004</span>
-              </div>
+            <div className='about-image gn-reveal from-right'>
+              <img src='/images.jpg' alt={`About ${companyName}`} loading='lazy' />
+              <div className='about-image-overlay'><span>Est. 2004</span></div>
             </div>
+          </div>
+        </section>
+
+        {/* ─── INSTAGRAM GALLERY ─── */}
+        <section className='gn-insta'>
+          <header className='section-head section-head-center gn-reveal'>
+            <span className='section-tag'>📸 @gokulnamkeen</span>
+            <h2>
+              Follow Us on <span className='title-highlight'>Instagram</span>
+            </h2>
+            <p className='section-sub'>
+              Tag us in your snacking moments for a chance to be featured.
+            </p>
+          </header>
+          <div className='gn-insta-grid gn-stagger'>
+            {INSTAGRAM_POSTS.map((p, i) => (
+              <div className='gn-insta-card' key={i}>
+                <span className='gn-insta-emoji'>{p.emoji}</span>
+                <div className='gn-insta-overlay'>
+                  <span>❤️ {p.likes}</span>
+                  <span>{p.tag}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ─── FAQ ─── */}
+        <section className='gn-faq'>
+          <header className='section-head section-head-center gn-reveal'>
+            <span className='section-tag'>FAQ</span>
+            <h2>
+              Frequently Asked <span className='title-highlight'>Questions</span>
+            </h2>
+            <p className='section-sub'>
+              Everything you need to know before you order.
+            </p>
+          </header>
+          <div className='gn-faq-list gn-reveal'>
+            {FAQS.map((f, i) => (
+              <div
+                key={f.q}
+                className={`gn-faq-item ${openFaq === i ? "is-open" : ""}`}
+                onClick={() => setOpenFaq(openFaq === i ? -1 : i)}>
+                <div className='gn-faq-q'>
+                  <span>{f.q}</span>
+                  <span className='gn-faq-toggle'>{openFaq === i ? "−" : "+"}</span>
+                </div>
+                <div className='gn-faq-a'>
+                  <p>{f.a}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ─── NEWSLETTER ─── */}
+        <section className='gn-newsletter gn-reveal'>
+          <div className='gn-newsletter-inner'>
+            <div className='gn-newsletter-text'>
+              <span className='section-tag'>Stay in Touch</span>
+              <h2>Get 10% Off Your First Order</h2>
+              <p>
+                Subscribe for exclusive offers, new flavour launches, and recipes
+                from our kitchen. No spam — we promise.
+              </p>
+            </div>
+            <form
+              className='gn-newsletter-form'
+              onSubmit={(e) => e.preventDefault()}>
+              <input type='email' placeholder='your@email.com' required />
+              <button type='submit' className='btn btn-primary'>
+                Subscribe
+              </button>
+            </form>
           </div>
         </section>
 
         {/* ─── CONTACT ─── */}
         <section id='contact' className='contact'>
-          <header className='section-head section-head-center'>
+          <header className='section-head section-head-center gn-reveal'>
             <span className='section-tag'>📮 Contact</span>
             <h2>
               Get In <span className='title-highlight'>Touch</span>
             </h2>
             <p className='section-sub'>
-              We’d love to hear from you. Reach out anytime!
+              We'd love to hear from you. Reach out anytime!
             </p>
           </header>
 
-          <div className='contact-info'>
+          <div className='contact-info gn-stagger'>
             {CONTACT_CARDS.map((c) => (
               <article className='contact-card' key={c.title}>
-                <div className='contact-icon' aria-hidden='true'>
-                  {c.icon}
-                </div>
+                <div className='contact-icon' aria-hidden='true'>{c.icon}</div>
                 <h3>{c.title}</h3>
                 <p>
                   {c.lines.map((line, i) => (
                     <span key={`${c.title}-${i}`}>
                       {c.links?.[i] ? (
-                        <a href={c.links[i]} className='contact-link'>
-                          {line}
-                        </a>
-                      ) : (
-                        line
-                      )}
+                        <a href={c.links[i]} className='contact-link'>{line}</a>
+                      ) : (line)}
                       {i < c.lines.length - 1 && <br />}
                     </span>
                   ))}
@@ -533,14 +673,8 @@ const Home = () => {
                 <a
                   className='contact-action'
                   href={c.action.href}
-                  target={
-                    c.action.href.startsWith("http") ? "_blank" : undefined
-                  }
-                  rel={
-                    c.action.href.startsWith("http")
-                      ? "noopener noreferrer"
-                      : undefined
-                  }>
+                  target={c.action.href.startsWith("http") ? "_blank" : undefined}
+                  rel={c.action.href.startsWith("http") ? "noopener noreferrer" : undefined}>
                   {c.action.label}
                 </a>
               </article>
@@ -549,16 +683,14 @@ const Home = () => {
         </section>
 
         {/* ─── CTA ─── */}
-        <section className='cta'>
+        <section className='cta gn-reveal'>
           <div className='cta-inner'>
             <h2>
-              Ready to Taste the{" "}
-              <span className='title-highlight'>Tradition?</span>
+              Ready to Taste the <span className='title-highlight'>Tradition?</span>
             </h2>
             <p>
-              Order now and enjoy authentic {companyName} delivered fresh to
-              your door. New customers get <strong>10% off</strong> on their
-              first order!
+              Order now and enjoy authentic {companyName} delivered fresh to your
+              door. New customers get <strong>10% off</strong> on their first order!
             </p>
             <button className='btn btn-primary btn-lg' onClick={goToProducts}>
               Order Now
@@ -578,6 +710,7 @@ const Home = () => {
               <div className='footer-contact-mini'>
                 {address && <span>📍 {address}</span>}
                 {primaryPhone && <span>📞 {primaryPhone}</span>}
+                {primaryEmail && <span>📧 {primaryEmail}</span>}
               </div>
             </div>
 
@@ -604,53 +737,20 @@ const Home = () => {
               <h4>Follow Us</h4>
               <div className='social-links'>
                 {company?.facebook && (
-                  <a
-                    href={company.facebook}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='social-link facebook'
-                    aria-label='Facebook'>
-                    <svg
-                      width='18'
-                      height='18'
-                      viewBox='0 0 24 24'
-                      fill='currentColor'>
-                      <path d='M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.45 2.89h-2.33v6.99A10 10 0 0 0 22 12Z' />
-                    </svg>
+                  <a href={company.facebook} target='_blank' rel='noopener noreferrer'
+                     className='social-link facebook' aria-label='Facebook'>
                     <span>Facebook</span>
                   </a>
                 )}
                 {company?.instagram && (
-                  <a
-                    href={company.instagram}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='social-link instagram'
-                    aria-label='Instagram'>
-                    <svg
-                      width='18'
-                      height='18'
-                      viewBox='0 0 24 24'
-                      fill='currentColor'>
-                      <path d='M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.8.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.8-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.8-.25-2.23-.41a3.7 3.7 0 0 1-1.38-.9 3.7 3.7 0 0 1-.9-1.38c-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.8.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16Z' />
-                    </svg>
+                  <a href={company.instagram} target='_blank' rel='noopener noreferrer'
+                     className='social-link instagram' aria-label='Instagram'>
                     <span>Instagram</span>
                   </a>
                 )}
                 {company?.twitter && (
-                  <a
-                    href={company.twitter}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='social-link x-twitter'
-                    aria-label='X'>
-                    <svg
-                      width='16'
-                      height='16'
-                      viewBox='0 0 24 24'
-                      fill='currentColor'>
-                      <path d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231L18.244 2.25Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z' />
-                    </svg>
+                  <a href={company.twitter} target='_blank' rel='noopener noreferrer'
+                     className='social-link x-twitter' aria-label='X'>
                     <span>X</span>
                   </a>
                 )}
@@ -659,9 +759,7 @@ const Home = () => {
           </div>
 
           <div className='footer-bottom'>
-            <p>
-              © {new Date().getFullYear()} {companyName}. All rights reserved.
-            </p>
+            <p>© {new Date().getFullYear()} {companyName}. All rights reserved.</p>
             <p className='footer-made'>Made with ❤️ in Surat, Gujarat</p>
           </div>
         </footer>

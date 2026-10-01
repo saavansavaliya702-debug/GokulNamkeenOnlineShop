@@ -1,26 +1,38 @@
 // src/pages/TrackOrder.jsx
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import api from "../utils/api";
 import UserNavbar from "../Navbar/UserNavbar";
 import { getImageUrl } from "../utils/image";
 import { useAuth } from "./AuthContext";
+import useScrollReveal from "../hooks/useScrollReveal";
+import BackButton from "../components/BackButton";
 import "../Css/TrackOrder.css";
 
+/* ── Step aliases — map backend statuses to canonical steps ── */
 const STEP_ALIASES = {
   pending: "pending",
+  placed: "pending",
   confirmed: "processing",
   processing: "processing",
+  packed: "processing",
+  packing: "processing",
   shipped: "shipped",
+  dispatched: "shipped",
+  out_for_delivery: "shipped",
+  in_transit: "shipped",
   delivered: "delivered",
+  completed: "delivered",
+  cancelled: "cancelled",
+  canceled: "cancelled",
 };
 
 const ORDER_STEPS = [
-  { key: "pending", label: "Placed", icon: "📝" },
+  { key: "pending",    label: "Placed",     icon: "📝" },
   { key: "processing", label: "Processing", icon: "⚙️" },
-  { key: "shipped", label: "Shipped", icon: "🚚" },
-  { key: "delivered", label: "Delivered", icon: "✅" },
+  { key: "shipped",    label: "Shipped",    icon: "🚚" },
+  { key: "delivered",  label: "Delivered",  icon: "✅" },
 ];
 
 const TrackOrder = () => {
@@ -31,7 +43,10 @@ const TrackOrder = () => {
   const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
-  // Redirect to login if not authenticated
+  /* Scroll-reveal — re-runs when orders change */
+  useScrollReveal(orders.length);
+
+  /* Redirect to login if not authenticated */
   useEffect(() => {
     if (!user) {
       toast.error("Please login to view your orders");
@@ -39,28 +54,31 @@ const TrackOrder = () => {
     }
   }, [user, navigate]);
 
-  const fetchOrders = useCallback(async (isRefresh = false) => {
-    if (!user) return; // Don't fetch if not authenticated
+  const fetchOrders = useCallback(
+    async (isRefresh = false) => {
+      if (!user) return;
 
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
+      if (isRefresh) setRefreshing(true);
+      else setLoading(true);
 
-    try {
-      const { data } = await api.get("/payments/my-orders");
-      setOrders(Array.isArray(data) ? data : []);
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to load orders");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [user]);
+      try {
+        const { data } = await api.get("/payments/my-orders");
+        setOrders(Array.isArray(data) ? data : []);
+      } catch (err) {
+        toast.error(err.response?.data?.message || "Failed to load orders");
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
+      }
+    },
+    [user]
+  );
 
   useEffect(() => {
     fetchOrders();
   }, [fetchOrders]);
 
-  // Poll every 30s, pause when tab hidden
+  /* Poll every 30s, pause when tab hidden */
   useEffect(() => {
     let id = null;
 
@@ -88,6 +106,7 @@ const TrackOrder = () => {
     };
   }, [fetchOrders]);
 
+  /* ── Helpers ── */
   const formatDate = (d) =>
     d
       ? new Date(d).toLocaleString("en-IN", {
@@ -97,12 +116,58 @@ const TrackOrder = () => {
       : "—";
 
   const stepIndex = (status) => {
-    const normalized = STEP_ALIASES[status] ?? status;
+    const key = String(status || "").toLowerCase();
+    const normalized = STEP_ALIASES[key] ?? key;
     return ORDER_STEPS.findIndex((s) => s.key === normalized);
   };
 
-  const money = (n) =>
-    `₹${Number(n || 0).toLocaleString("en-IN")}`;
+  const money = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
+
+  /* ── ETA text per order ── */
+  const getEta = (o) => {
+    const status = String(o.order_status || "").toLowerCase();
+    const aliased = STEP_ALIASES[status];
+    if (aliased === "delivered") return "Delivered";
+    if (aliased === "cancelled") return "Cancelled";
+    const base = new Date(o.createdAt || Date.now());
+    base.setDate(base.getDate() + 5);
+    return `Est. delivery by ${base.toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+    })}`;
+  };
+
+  /* ── ETA variant class (drives badge colour + pulse) ── */
+  const etaClass = (o) => {
+    const status = String(o.order_status || "").toLowerCase();
+    const aliased = STEP_ALIASES[status];
+    if (aliased === "delivered") return "is-delivered";
+    if (aliased === "cancelled") return "is-cancelled";
+
+    const created = new Date(o.createdAt || Date.now());
+    const daysOld =
+      (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
+    if (daysOld >= 3) return "is-soon";
+    return "";
+  };
+
+  /* Aggregate stats for the header */
+  const stats = useMemo(() => {
+    const total = orders.length;
+    const inTransit = orders.filter((o) => {
+      const s = STEP_ALIASES[String(o.order_status || "").toLowerCase()];
+      return s === "shipped";
+    }).length;
+    const delivered = orders.filter((o) => {
+      const s = STEP_ALIASES[String(o.order_status || "").toLowerCase()];
+      return s === "delivered";
+    }).length;
+    const totalSpent = orders.reduce(
+      (sum, o) => sum + Number(o.total || 0),
+      0
+    );
+    return { total, inTransit, delivered, totalSpent };
+  }, [orders]);
 
   return (
     <>
@@ -110,39 +175,81 @@ const TrackOrder = () => {
       <Toaster position="top-right" toastOptions={{ duration: 2800 }} />
 
       <div className="to-page">
-        <div className="to-container">
-          {/* Header */}
-          <header className="to-header">
-            <div className="to-header-left">
-              <div className="to-header-icon">📍</div>
-              <div>
-                <h1>Track My Orders</h1>
-                <p>
-                  {orders.length} order{orders.length === 1 ? "" : "s"}
-                </p>
-              </div>
-            </div>
-            <button
-              className={`to-refresh ${refreshing ? "is-refreshing" : ""}`}
-              onClick={() => fetchOrders(true)}
-              disabled={loading || refreshing}
-              type="button"
-            >
-              <span className="refresh-icon">⟳</span>
-              {refreshing ? "Refreshing..." : "Refresh"}
-            </button>
-          </header>
+        {/* Floating particles */}
+        <div className="to-particles" aria-hidden="true">
+          <span /><span /><span /><span /><span /><span />
+        </div>
 
-          {loading ? (
-            <div className="to-loading">
+        <div className="to-container">
+          {loading && (
+            <div className="to-loading to-loading-top" role="status" aria-live="polite">
               <div className="to-spinner" />
               <p>Loading your orders…</p>
             </div>
+          )}
+
+          {/* ── Animated header ── */}
+          <header className="to-hero">
+            <div className="to-hero-inner">
+              <div className="to-hero-text">
+                <BackButton to="/home" />
+                <span className="to-eyebrow">
+                  <span className="to-eyebrow-dot" />
+                  Live tracking · Auto-refreshes
+                </span>
+                <h1 className="to-title">
+                  Track My <span className="to-title-mark">Orders</span>
+                </h1>
+                <p className="to-subtitle">
+                  Follow every step from our kitchen to your doorstep.
+                </p>
+
+                <div className="to-stats">
+                  <div className="to-stat">
+                    <span className="to-stat-value">{stats.total}</span>
+                    <span className="to-stat-label">Total Orders</span>
+                  </div>
+                  <div className="to-stat">
+                    <span className="to-stat-value">{stats.inTransit}</span>
+                    <span className="to-stat-label">In Transit</span>
+                  </div>
+                  {stats.delivered > 0 && (
+                    <div className="to-stat">
+                      <span className="to-stat-value">{stats.delivered}</span>
+                      <span className="to-stat-label">Delivered</span>
+                    </div>
+                  )}
+                  <div className="to-stat">
+                    <span className="to-stat-value">
+                      ₹{stats.totalSpent.toLocaleString("en-IN")}
+                    </span>
+                    <span className="to-stat-label">Total Spent</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                className={`to-refresh-btn ${
+                  refreshing ? "is-refreshing" : ""
+                }`}
+                onClick={() => fetchOrders(true)}
+                disabled={loading || refreshing}
+                type="button"
+              >
+                <span className="refresh-icon">⟳</span>
+                {refreshing ? "Refreshing..." : "Refresh"}
+              </button>
+            </div>
+          </header>
+
+          {/* ── Loading / empty / list ── */}
+          {loading ? (
+            null
           ) : orders.length === 0 ? (
             <div className="to-empty">
               <div className="empty-icon">📭</div>
               <h3>No orders yet</h3>
-              <p>You haven’t placed any orders yet.</p>
+              <p>You haven't placed any orders yet.</p>
               <button
                 className="to-btn-primary"
                 onClick={() => navigate("/product")}
@@ -152,13 +259,20 @@ const TrackOrder = () => {
               </button>
             </div>
           ) : (
-            <div className="to-list">
+            <div className="to-list gn-stagger">
               {orders.map((o) => {
                 const isOpen = expanded === o.id;
                 const rawIdx = stepIndex(o.order_status);
                 const safeIdx = rawIdx < 0 ? 0 : rawIdx;
-                const isCancelled = o.order_status === "cancelled";
-                const itemCount = Array.isArray(o.items) ? o.items.length : 0;
+                const statusKey = String(o.order_status || "").toLowerCase();
+                const isCancelled =
+                  statusKey === "cancelled" || statusKey === "canceled";
+                const itemCount = Array.isArray(o.items)
+                  ? o.items.length
+                  : 0;
+                const progressPct = isCancelled
+                  ? 0
+                  : ((safeIdx + 1) / ORDER_STEPS.length) * 100;
 
                 return (
                   <article
@@ -167,46 +281,63 @@ const TrackOrder = () => {
                       isCancelled ? "is-cancelled" : ""
                     }`}
                   >
+                    {/* Progress ribbon */}
+                    {!isCancelled && (
+                      <div className="to-progress-track">
+                        <div
+                          className="to-progress-fill"
+                          style={{ width: `${progressPct}%` }}
+                        />
+                      </div>
+                    )}
+
                     {/* Head */}
                     <div className="to-card-head">
                       <div className="to-order-info">
                         <span className="to-order-id">
-                          Order <strong>#{String(o.id).padStart(5, "0")}</strong>
+                          Order{" "}
+                          <strong>
+                            #{String(o.id).padStart(5, "0")}
+                          </strong>
                         </span>
-                        <span className="to-date">{formatDate(o.createdAt)}</span>
+                        <span className="to-date">
+                          {formatDate(o.createdAt)}
+                        </span>
+                        <span
+                          className={`to-eta ${etaClass(o)}`}
+                          title={getEta(o)}
+                        >
+                          {getEta(o)}
+                        </span>
                       </div>
-                      <span
-                        className={`to-badge to-badge-${String(
-                          o.order_status
-                        ).toLowerCase()}`}
-                      >
+                      <span className={`to-badge to-badge-${statusKey}`}>
                         {o.order_status}
                       </span>
                     </div>
 
-                    {/* Stepper */}
+                    {/* Stepper — only shows steps up to current */}
                     {!isCancelled ? (
                       <div className="to-stepper">
                         {ORDER_STEPS.map((step, i) => {
+                          if (i > safeIdx) return null;
+
                           const done = safeIdx >= i;
                           const active = safeIdx === i;
                           return (
                             <div
                               key={step.key}
-                              className={`to-step ${done ? "is-done" : ""} ${
-                                active ? "is-active" : ""
-                              }`}
+                              className={`to-step ${
+                                done ? "is-done" : ""
+                              } ${active ? "is-active" : ""}`}
                             >
                               <div className="to-step-dot">
                                 {done ? "✓" : step.icon}
                               </div>
-                              <div className="to-step-label">{step.label}</div>
-                              {i < ORDER_STEPS.length - 1 && (
-                                <div
-                                  className={`to-step-line ${
-                                    safeIdx > i ? "is-done" : ""
-                                  }`}
-                                />
+                              <div className="to-step-label">
+                                {step.label}
+                              </div>
+                              {i < safeIdx && (
+                                <div className="to-step-line is-done" />
                               )}
                             </div>
                           );
@@ -236,15 +367,21 @@ const TrackOrder = () => {
                       </div>
                       <button
                         className="to-toggle-btn"
-                        onClick={() => setExpanded(isOpen ? null : o.id)}
+                        onClick={() =>
+                          setExpanded(isOpen ? null : o.id)
+                        }
                         type="button"
                       >
                         {isOpen ? "Hide details ▲" : "View details ▼"}
                       </button>
                     </div>
 
-                    {/* Details */}
-                    {isOpen && (
+                    {/* Details (animated slide) */}
+                    <div
+                      className={`to-detail-wrap ${
+                        isOpen ? "is-open" : ""
+                      }`}
+                    >
                       <div className="to-detail">
                         <div className="to-col">
                           <h4>📍 Shipping Address</h4>
@@ -279,7 +416,8 @@ const TrackOrder = () => {
                               {o.payment_status}
                             </span>
                             <br />
-                            Mode: {o.payment_mode?.toUpperCase() || "—"}
+                            Mode:{" "}
+                            {o.payment_mode?.toUpperCase() || "—"}
                             <br />
                             Txn:{" "}
                             <code className="to-txn">
@@ -315,13 +453,15 @@ const TrackOrder = () => {
                                   {it.image ? (
                                     <img
                                       src={
-                                        typeof getImageUrl === "function"
+                                        typeof getImageUrl ===
+                                        "function"
                                           ? getImageUrl(it.image)
                                           : it.image
                                       }
                                       alt={it.name}
                                       onError={(e) => {
-                                        e.currentTarget.style.display = "none";
+                                        e.currentTarget.style.display =
+                                          "none";
                                       }}
                                     />
                                   ) : (
@@ -341,7 +481,8 @@ const TrackOrder = () => {
                                 </div>
                                 <span className="to-item-total">
                                   {money(
-                                    (it.price || 0) * (it.quantity || 1)
+                                    (it.price || 0) *
+                                      (it.quantity || 1)
                                   )}
                                 </span>
                               </li>
@@ -349,7 +490,7 @@ const TrackOrder = () => {
                           </ul>
                         </div>
                       </div>
-                    )}
+                    </div>
                   </article>
                 );
               })}

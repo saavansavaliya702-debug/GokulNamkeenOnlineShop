@@ -5,6 +5,7 @@ import toast, { Toaster } from "react-hot-toast";
 import api from "../utils/api";
 import AdminNavbar from "../Navbar/AdminNavbar";
 import { useAuth } from "./AuthContext";
+import BackButton from "../components/BackButton";
 import "../Css/AdminCompanyInfo.css";
 
 const emptyForm = {
@@ -218,13 +219,10 @@ const AdminCompanyInfo = () => {
       <div className="aci-page">
         <div className="aci-container">
           <header className="aci-header">
-            <button
+            <BackButton
               className="aci-back"
               onClick={() => navigate(-1)}
-              type="button"
-            >
-              ← Back
-            </button>
+            />
             <div className="aci-header-main">
               <div className="aci-header-icon">🏢</div>
               <div>

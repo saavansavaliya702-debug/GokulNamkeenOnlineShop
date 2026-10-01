@@ -1,56 +1,22 @@
 // src/pages/About.jsx
 import { useNavigate } from "react-router-dom";
+import BackButton from "../components/BackButton";
 import UserNavbar from "../Navbar/UserNavbar";
+import useScrollReveal from "../hooks/useScrollReveal";
 import "../Css/about.css";
 
 const TIMELINE = [
-  {
-    year: "2003",
-    title: "The Beginning",
-    icon: "🏠",
-    desc: "Started as a small family business with traditional recipes and local distribution in Gujarat.",
-  },
-  {
-    year: "2012",
-    title: "Expansion",
-    icon: "🏭",
-    desc: "Set up modern manufacturing units and expanded distribution across major Indian cities.",
-  },
-  {
-    year: "2018",
-    title: "Going Global",
-    icon: "🌍",
-    desc: "Entered international markets. Today our products reach customers in more than 18 countries.",
-  },
-  {
-    year: "2025",
-    title: "Current Status",
-    icon: "📈",
-    desc: "Market capitalization of ₹2,850+ Crore with consistent year-on-year growth.",
-  },
+  { year: "2003", title: "The Beginning",   icon: "🏠", desc: "Started as a small family business with traditional recipes and local distribution in Gujarat." },
+  { year: "2012", title: "Expansion",        icon: "🏭", desc: "Set up modern manufacturing units and expanded distribution across major Indian cities." },
+  { year: "2018", title: "Going Global",     icon: "🌍", desc: "Entered international markets. Today our products reach customers in more than 18 countries." },
+  { year: "2025", title: "Current Status",   icon: "📈", desc: "Market capitalization of ₹2,850+ Crore with consistent year-on-year growth." },
 ];
 
 const MARKETS = [
-  {
-    icon: "🇮🇳",
-    title: "India (Local)",
-    desc: "Strong presence across retail, modern trade, and e-commerce in all major cities and towns.",
-  },
-  {
-    icon: "🌎",
-    title: "International",
-    desc: "Actively exporting to USA, Canada, UK, UAE, Saudi Arabia, Singapore, Australia & Europe.",
-  },
-  {
-    icon: "🛒",
-    title: "Retail & Online",
-    desc: "Available on Amazon, Flipkart, BigBasket, and leading international grocery platforms.",
-  },
-  {
-    icon: "🤝",
-    title: "Distribution",
-    desc: "Robust network with partners in 18+ countries, ensuring fresh supply worldwide.",
-  },
+  { icon: "🇮🇳", title: "India (Local)",    desc: "Strong presence across retail, modern trade, and e-commerce in all major cities and towns." },
+  { icon: "🌎", title: "International",      desc: "Actively exporting to USA, Canada, UK, UAE, Saudi Arabia, Singapore, Australia & Europe." },
+  { icon: "🛒", title: "Retail & Online",    desc: "Available on Amazon, Flipkart, BigBasket, and leading international grocery platforms." },
+  { icon: "🤝", title: "Distribution",       desc: "Robust network with partners in 18+ countries, ensuring fresh supply worldwide." },
 ];
 
 const INVESTORS = [
@@ -68,28 +34,62 @@ const HIGHLIGHTS = [
   "Trusted by millions of customers worldwide",
 ];
 
+// --- NEW DATA ---
+const STATS = [
+  { value: "20+",   label: "Years of Legacy",        icon: "🏆" },
+  { value: "18+",   label: "Countries Served",       icon: "🌍" },
+  { value: "500+",  label: "Team Members",           icon: "👥" },
+  { value: "₹2,850Cr", label: "Market Capitalization", icon: "📊" },
+];
+
+const LEADERSHIP = [
+  {
+    name: "Rajesh Patel",
+    role: "Founder & Chairman",
+    image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=300&h=300&fit=crop&crop=faces",
+    bio: "Visionary founder who started the journey from a home kitchen in 2003.",
+  },
+  {
+    name: "Priya Sharma",
+    role: "CEO",
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&h=300&fit=crop&crop=faces",
+    bio: "Leading global expansion and digital transformation since 2015.",
+  },
+  {
+    name: "Amit Desai",
+    role: "Chief Operations Officer",
+    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop&crop=faces",
+    bio: "Overseeing manufacturing excellence and supply chain across 18+ countries.",
+  },
+  {
+    name: "Neha Gupta",
+    role: "Head of Quality & Innovation",
+    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop&crop=faces",
+    bio: "Ensuring authentic taste and world-class quality in every product.",
+  },
+];
+
 const About = () => {
   const navigate = useNavigate();
+  useScrollReveal();
 
   return (
     <>
       <UserNavbar />
 
       <div className="about-page">
-        {/* Back */}
-        <div className="about-container">
-          <button
-            className="about-back"
-            onClick={() => navigate(-1)}
-            type="button"
-          >
-            ← Back
-          </button>
+        {/* Particles */}
+        <div className="ab-particles" aria-hidden="true">
+          <span /><span /><span /><span /><span /><span />
         </div>
 
         {/* Hero */}
         <section className="about-hero">
           <div className="about-hero-inner">
+            <BackButton
+              className="about-back"
+              onClick={() => navigate(-1)}
+            />
             <span className="about-eyebrow">Since 2003</span>
             <h1>
               Our <span className="highlight">Journey</span>
@@ -101,11 +101,26 @@ const About = () => {
           </div>
         </section>
 
+        {/* Stats */}
+        <section className="about-stats">
+          <div className="about-container">
+            <div className="stats-grid gn-stagger">
+              {STATS.map((s) => (
+                <div key={s.label} className="stat-card">
+                  <span className="stat-icon">{s.icon}</span>
+                  <span className="stat-value">{s.value}</span>
+                  <span className="stat-label">{s.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Story */}
         <section className="about-story">
           <div className="about-container">
             <div className="story-grid">
-              <div className="story-text">
+              <div className="story-text gn-reveal from-left">
                 <span className="section-tag">Our Story</span>
                 <h2>About Gokul Namkeen</h2>
                 <p>
@@ -130,7 +145,7 @@ const About = () => {
                   USA, Canada, and Australia.
                 </p>
 
-                <ul className="highlight-list">
+                <ul className="highlight-list gn-stagger">
                   {HIGHLIGHTS.map((item) => (
                     <li key={item}>
                       <span className="check">✓</span>
@@ -140,7 +155,7 @@ const About = () => {
                 </ul>
               </div>
 
-              <div className="story-image">
+              <div className="story-image gn-reveal from-right">
                 <img
                   src="https://images.unsplash.com/photo-1601050690597-df0568f70950?w=600"
                   alt="Traditional Indian snacks"
@@ -158,14 +173,14 @@ const About = () => {
         {/* Timeline */}
         <section className="about-timeline">
           <div className="about-container">
-            <header className="section-head">
+            <header className="section-head gn-reveal">
               <span className="section-tag">Milestones</span>
               <h2>
                 Growth Journey & <span className="highlight">Market Position</span>
               </h2>
             </header>
 
-            <div className="timeline-grid">
+            <div className="timeline-grid gn-stagger">
               {TIMELINE.map((t) => (
                 <article key={t.year} className="timeline-card">
                   <div className="timeline-icon">{t.icon}</div>
@@ -178,10 +193,39 @@ const About = () => {
           </div>
         </section>
 
+        {/* Leadership */}
+        <section className="about-leadership">
+          <div className="about-container">
+            <header className="section-head gn-reveal">
+              <span className="section-tag">Our Team</span>
+              <h2>
+                Leadership & <span className="highlight">Visionaries</span>
+              </h2>
+              <p className="section-sub">
+                Meet the people driving our mission to bring authentic Indian
+                flavors to every corner of the world.
+              </p>
+            </header>
+
+            <div className="leadership-grid gn-stagger">
+              {LEADERSHIP.map((person) => (
+                <article key={person.name} className="leader-card">
+                  <div className="leader-image">
+                    <img src={person.image} alt={person.name} loading="lazy" />
+                  </div>
+                  <h3>{person.name}</h3>
+                  <span className="leader-role">{person.role}</span>
+                  <p>{person.bio}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Investors */}
         <section className="about-investors">
           <div className="about-container">
-            <header className="section-head">
+            <header className="section-head gn-reveal">
               <span className="section-tag">Partners</span>
               <h2>
                 Investors & <span className="highlight">Strategic Partners</span>
@@ -192,7 +236,7 @@ const About = () => {
               </p>
             </header>
 
-            <ul className="investor-list">
+            <ul className="investor-list gn-stagger">
               {INVESTORS.map((item) => (
                 <li key={item}>
                   <span className="check">✓</span>
@@ -201,7 +245,7 @@ const About = () => {
               ))}
             </ul>
 
-            <p className="investor-note">
+            <p className="investor-note gn-reveal">
               These partnerships have helped us modernize manufacturing,
               strengthen our supply chain, and accelerate international
               expansion while preserving the authentic taste customers love.
@@ -212,14 +256,14 @@ const About = () => {
         {/* Markets */}
         <section className="about-markets">
           <div className="about-container">
-            <header className="section-head">
+            <header className="section-head gn-reveal">
               <span className="section-tag">Reach</span>
               <h2>
                 Local + <span className="highlight">International Markets</span>
               </h2>
             </header>
 
-            <div className="markets-grid">
+            <div className="markets-grid gn-stagger">
               {MARKETS.map((m) => (
                 <article key={m.title} className="market-card">
                   <div className="market-icon">{m.icon}</div>
@@ -232,7 +276,7 @@ const About = () => {
         </section>
 
         {/* CTA */}
-        <section className="about-cta">
+        <section className="about-cta gn-reveal">
           <div className="cta-inner">
             <h2>
               From Our Kitchen to the <span className="highlight">World</span>
