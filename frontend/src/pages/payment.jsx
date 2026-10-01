@@ -82,7 +82,7 @@ const PAYMENT_METHODS = [
   { id: "upi", label: "UPI", icon: "📱" },
   { id: "netbanking", label: "Net Banking", icon: "🏦" },
   { id: "cod", label: "Cash on Delivery", icon: "💵" },
-  { id: "cash", label: "Cash Payment", icon: "💰" },
+  // { id: "cash", label: "Cash Payment", icon: "💰" },
 ];
 
 const FREE_SHIPPING_THRESHOLD = 500;
