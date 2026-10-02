@@ -3,23 +3,20 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    try {
+    const table = await queryInterface.describeTable("RegisterDatabases");
+    if (!table.is_admin) {
       await queryInterface.addColumn("RegisterDatabases", "is_admin", {
-        type: Sequelize.BOOLEAN, // ✅ correct
+        type: Sequelize.BOOLEAN,
         allowNull: false,
         defaultValue: false,
       });
-    } catch (e) {
-      console.error("Error creating States status table:", e);
     }
   },
 
-  async down(queryInterface, Sequelize) {
-    try {
+  async down(queryInterface) {
+    const table = await queryInterface.describeTable("RegisterDatabases");
+    if (table.is_admin) {
       await queryInterface.removeColumn("RegisterDatabases", "is_admin");
-    } catch (e) {
-      console.error("Error creating States status table:", e);
     }
   },
 };
-

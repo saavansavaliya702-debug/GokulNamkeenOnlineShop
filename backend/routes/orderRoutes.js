@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { protect, adminOnly } = require("../middleware/auth");
-const { Order, AddProduct } = require("../models");
+const { Payment, AddProduct } = require("../models");
 
 async function reduceStockForOrder(order) {
   if (!order || !Array.isArray(order.items)) return;
@@ -25,7 +25,7 @@ router.put("/:id/status", protect, adminOnly, async (req, res) => {
       newStatus: order_status,
     });
 
-    const order = await Order.findByPk(req.params.id);
+    const order = await Payment.findByPk(req.params.id);
     if (!order) return res.status(404).json({ error: "Order not found" });
 
     console.log("🔍 Order items:", JSON.stringify(order.items, null, 2));

@@ -62,6 +62,7 @@ module.exports = (sequelize, DataTypes) => {
       description: {
         type: DataTypes.TEXT,
         allowNull: true,
+        defaultValue: "",
       },
       is_active: {
         type: DataTypes.BOOLEAN,
@@ -83,7 +84,31 @@ module.exports = (sequelize, DataTypes) => {
     },
   );
 
-  AddProductModel.associate = () => {};
+  AddProductModel.associate = (models) => {
+    // 1-to-1: one product has one nutrition row
+    AddProductModel.hasOne(models.NutritionsDatabase, {
+      foreignKey: "product_id",
+      as: "nutrition",
+      onUpdate: "CASCADE",
+      onDelete: "CASCADE",
+    });
+
+    // 1-to-many: one product has many ingredients
+    AddProductModel.hasMany(models.IngredientsDatabase, {
+      foreignKey: "product_id",
+      as: "ingredients",
+      onUpdate: "CASCADE",
+      onDelete: "CASCADE",
+    });
+
+    // 1-to-many: one product has many storage instructions
+    AddProductModel.hasMany(models.StorageInstructionsDatabase, {
+      foreignKey: "product_id",
+      as: "storageInstructions",
+      onUpdate: "CASCADE",
+      onDelete: "CASCADE",
+    });
+  };
 
   return AddProductModel;
 };

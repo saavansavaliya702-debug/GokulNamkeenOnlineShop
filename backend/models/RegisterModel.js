@@ -57,7 +57,7 @@ module.exports = (sequelize, DataTypes) => {
   );
 
   RegisterModel.associate = (models) => {
-    RegisterModel.hasMany(models.Order, {
+    RegisterModel.hasMany(models.Payment, {
       foreignKey: "user_id",
       as: "payment",
     });

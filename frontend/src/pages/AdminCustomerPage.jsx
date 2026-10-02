@@ -6,9 +6,10 @@ import toast, { Toaster } from "react-hot-toast";
 import AdminNavbar from "../Navbar/AdminNavbar";
 import { useAuth } from "./AuthContext";
 import BackButton from "../components/BackButton";
+import { API_URL } from "../config/api";
 import "../Css/AdminCustomerPage.css";
 
-const API = "https://gokulnamkeenonlineshop-backend.onrender.com/api/admin";
+const API = `${API_URL}/admin`;
 
 const getErrMsg = (err) =>
   err?.response?.data?.error || err?.message || "Unknown error";

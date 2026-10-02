@@ -1,5 +1,6 @@
 // src/utils/api.js
 // import axios from "axios";
+import { API_URL } from "../config/api";
 
 // const api = axios.create({
 //   baseURL: "http://localhost:7070/api",
@@ -46,7 +47,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://gokulnamkeenonlineshop-backend.onrender.com/api",
+  baseURL: API_URL,
   withCredentials: true,
 });
 

@@ -4,10 +4,11 @@ import BackButton from "../components/BackButton";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import UserNavbar from "../Navbar/UserNavbar";
+import { API_URL } from "../config/api";
 import { getImageUrl } from "../utils/image";
 import "../Css/payment.css";
 
-const API = "https://gokulnamkeenonlineshop-backend.onrender.com/api";
+const API = API_URL;
 const RAZORPAY_SCRIPT = "https://checkout.razorpay.com/v1/checkout.js";
 
 /* ------------------------------------------------------------------ */
@@ -354,7 +355,7 @@ const Payment = () => {
           try {
             const verify = await apiFetch("/payments/verify", {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: authHeaders({ "Content-Type": "application/json" }),
               body: JSON.stringify({
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,

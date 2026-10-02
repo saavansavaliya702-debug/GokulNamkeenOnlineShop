@@ -28,6 +28,7 @@ import Product from "./pages/ProductPage.jsx";
 import Payment from "./pages/payment.jsx";
 import AdminOrders from "./pages/AdminOrders.jsx";
 import TrackOrder from "./pages/TrackOrder.jsx";
+import RequireAuth from "./pages/RequireAuth.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import CustomerPage from "./pages/AdminCustomerPage.jsx";
 import AdminCompanyInfo from "./pages/AdminCompanyInfo";
@@ -146,9 +147,9 @@ function App() {
         <Route
           path='/payment'
           element={
-            // <PublicRoute>
-            <Payment />
-            // </PublicRoute>
+            <RequireAuth>
+              <Payment />
+            </RequireAuth>
           }
         />
         <Route

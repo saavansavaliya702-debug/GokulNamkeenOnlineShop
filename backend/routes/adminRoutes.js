@@ -115,9 +115,9 @@ const { fn, col, literal } = require("sequelize");
 const router = express.Router();
 const db = require("../models");
 
-const { Register, Order } = db;
+const { Register, Payment } = db;
 
-console.log("🔍 adminRoutes loaded. Register:", !!Register, "Order:", !!Order);
+console.log("🔍 adminRoutes loaded. Register:", !!Register, "Payment:", !!Payment);
 
 /* ============================================================
    GET /api/admin/users
@@ -137,7 +137,7 @@ router.get("/users", async (req, res) => {
         [fn("MAX", col("payment.createdAt")), "last_order_at"],
       ],
       include: [
-        { model: Order, as: "payment", attributes: [], required: false },
+        { model: Payment, as: "payment", attributes: [], required: false },
       ],
       group: ["Register.id"],
       order: [["createdAt", "DESC"]],
@@ -175,7 +175,7 @@ router.get("/lost-users", async (req, res) => {
         [fn("MAX", col("payment.createdAt")), "last_order_at"],
       ],
       include: [
-        { model: Order, as: "payment", attributes: [], required: false },
+        { model: Payment, as: "payment", attributes: [], required: false },
       ],
       group: ["Register.id"],
       raw: true,
@@ -305,7 +305,7 @@ router.get("/customer-items", async (req, res) => {
       raw: true,
     });
 
-    const orders = await Order.findAll({
+    const orders = await Payment.findAll({
       where: { is_delete: false },
       attributes: ["id", "user_id", "items", "total", "createdAt"],
       raw: true,

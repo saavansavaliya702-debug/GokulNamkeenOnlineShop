@@ -477,6 +477,12 @@
   line-height: 1.4;
 }
 
+.ap-storage-entry {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--ap-border);
+  margin-bottom: 16px;
+}
+
 /* Inline warning shown when the product will immediately be low-stock */
 .ap-inline-warning {
   margin-top: 12px;
@@ -498,5 +504,401 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Add product form refinements */
+.ap-page {
+  background:
+    radial-gradient(ellipse at 12% 0%, rgba(187, 247, 208, 0.42), transparent 34rem),
+    linear-gradient(180deg, #f7faf8 0%, var(--ap-bg) 32rem);
+  padding: 36px 20px 72px;
+}
+
+.ap-container {
+  max-width: 1240px;
+}
+
+.ap-header {
+  padding: 8px 4px 22px;
+}
+
+.ap-header-main {
+  align-items: center;
+  gap: 18px;
+}
+
+.ap-header-icon {
+  width: 60px;
+  height: 60px;
+  border: 1px solid rgba(22, 163, 74, 0.12);
+  color: var(--ap-primary-dark);
+  background: linear-gradient(145deg, #fff, #effcf3);
+}
+
+.ap-header h1 {
+  font-size: clamp(1.55rem, 3vw, 2rem);
+  letter-spacing: -0.035em;
+}
+
+.ap-form {
+  padding: clamp(18px, 3vw, 34px);
+  border-color: #e4ebe6;
+  border-radius: 20px;
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.07);
+}
+
+.ap-grid {
+  grid-template-columns: minmax(0, 1.55fr) minmax(270px, 0.8fr);
+  gap: clamp(22px, 3vw, 36px);
+  align-items: start;
+}
+
+.ap-section {
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #e9eeeb;
+  border-radius: 15px;
+  background: linear-gradient(145deg, #fff 70%, #fbfdfb);
+}
+
+.ap-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding-bottom: 13px;
+  color: #183324;
+  font-size: 1.03rem;
+  letter-spacing: -0.01em;
+  border-bottom-color: #e9eeeb;
+}
+
+.ap-section-title::before {
+  width: 4px;
+  height: 18px;
+  border-radius: 99px;
+  background: var(--ap-primary);
+  content: "";
+}
+
+.ap-field {
+  min-width: 0;
+  margin-bottom: 16px;
+}
+
+.ap-field label {
+  font-size: 0.82rem;
+  letter-spacing: 0.005em;
+}
+
+.ap-field input,
+.ap-field select,
+.ap-field textarea {
+  min-height: 44px;
+  padding: 10px 12px;
+  border-color: #dce5de;
+  border-radius: 9px;
+  background-color: #fbfcfb;
+  font-size: 0.9rem;
+}
+
+.ap-field textarea {
+  min-height: 100px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.ap-field input::placeholder,
+.ap-field textarea::placeholder {
+  color: #9aa79e;
+  font-size: 0.83rem;
+}
+
+.ap-field input:focus,
+.ap-field select:focus,
+.ap-field textarea:focus {
+  border-color: #22a653;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.11);
+}
+
+.ap-row {
+  gap: 14px;
+}
+
+.ap-row.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ap-nutrition-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 2px 14px;
+}
+
+.ap-nutrition-grid .ap-field {
+  margin-bottom: 12px;
+}
+
+.ap-nutrition-grid .ap-field input {
+  min-height: 40px;
+}
+
+.ap-ingredient-row {
+  grid-template-columns: minmax(0, 1fr) 124px;
+  align-items: end;
+  gap: 12px;
+  padding: 12px 14px 0;
+  margin-bottom: 10px;
+  border: 1px solid #e8eee9;
+  border-radius: 11px;
+  background: #fbfdfb;
+}
+
+.ap-ingredient-row .ap-field {
+  margin-bottom: 12px;
+}
+
+.ap-remove-field {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.ap-remove-field label {
+  visibility: hidden;
+}
+
+.ap-ingredient-row .ap-btn,
+.ap-storage-entry .ap-btn {
+  min-height: 40px;
+  padding: 9px 14px;
+  border-radius: 9px;
+  font-size: 0.84rem;
+}
+
+.ap-section > .ap-btn-secondary {
+  min-height: 42px;
+  padding: 10px 16px;
+  color: var(--ap-primary-dark);
+  border-color: #b8e2c5;
+  background: #f2fbf4;
+}
+
+.ap-section > .ap-btn-secondary:hover:not(:disabled) {
+  border-color: var(--ap-primary);
+  background: #e8f8ed;
+}
+
+.ap-storage-entry {
+  padding: 16px;
+  margin-bottom: 14px;
+  border: 1px solid #e8eee9;
+  border-radius: 12px;
+  background: #fbfdfb;
+}
+
+.ap-storage-fields {
+  grid-template-columns: 84px minmax(130px, 0.8fr) minmax(0, 1.5fr);
+  gap: 12px;
+}
+
+.ap-storage-fields .ap-field {
+  margin-bottom: 8px;
+}
+
+.ap-hint {
+  color: #68796e;
+  font-size: 0.8rem;
+}
+
+.ap-side {
+  position: sticky;
+  top: 24px;
+}
+
+.ap-side .ap-section {
+  padding: 18px;
+}
+
+.image-mode-tabs {
+  gap: 6px;
+  padding: 4px;
+  border-radius: 11px;
+  background: #f1f5f2;
+}
+
+.mode-tab {
+  border-color: transparent;
+  border-radius: 8px;
+  background: transparent;
+}
+
+.mode-tab.active {
+  background: white;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.1);
+}
+
+.dropzone {
+  min-height: 220px;
+  border-color: #cbd8ce;
+  background:
+    radial-gradient(circle at center, rgba(220, 252, 231, 0.72), transparent 70%),
+    #f8fbf8;
+}
+
+.ap-preview,
+.preview-wrap {
+  border-radius: 12px;
+}
+
+.summary-card {
+  border-color: #dce9df;
+  background: linear-gradient(150deg, #f7fcf8, #f1f8f3);
+}
+
+.summary-card h3 {
+  font-size: 0.95rem;
+}
+
+.summary-card li {
+  align-items: baseline;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(203, 213, 205, 0.55);
+}
+
+.summary-card li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.ap-actions {
+  position: sticky;
+  bottom: 12px;
+  z-index: 3;
+  margin: 20px -8px -8px;
+  padding: 16px 8px 8px;
+  border-top: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 -8px 22px rgba(15, 23, 42, 0.06);
+  backdrop-filter: blur(10px);
+}
+
+.ap-actions .ap-btn {
+  min-height: 46px;
+}
+
+.ap-btn-secondary {
+  border: 1.5px solid var(--ap-border);
+}
+
+@media (max-width: 980px) {
+  .ap-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 0.68fr);
+  }
+
+  .ap-nutrition-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 860px) {
+  .ap-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ap-side {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 16px;
+  }
+
+  .ap-side .summary-card {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .ap-page {
+    padding: 22px 12px 38px;
+  }
+
+  .ap-header {
+    padding: 0 2px 16px;
+  }
+
+  .ap-header-main {
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .ap-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    font-size: 1.25rem;
+  }
+
+  .ap-header p {
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  .ap-form {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .ap-section {
+    padding: 15px;
+    margin-bottom: 14px;
+    border-radius: 12px;
+  }
+
+  .ap-row,
+  .ap-row.three,
+  .ap-nutrition-grid,
+  .ap-storage-fields {
+    grid-template-columns: 1fr !important;
+  }
+
+  .ap-ingredient-row {
+    grid-template-columns: minmax(0, 1fr) 88px;
+    gap: 8px;
+    padding: 10px 10px 0;
+  }
+
+  .ap-ingredient-row .ap-remove-field .ap-btn {
+    padding: 8px;
+  }
+
+  .ap-side {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .ap-actions {
+    bottom: 8px;
+    gap: 8px;
+    margin: 14px -4px -4px;
+    padding: 12px 4px 4px;
+  }
+
+  .ap-actions .ap-btn {
+    flex: 1;
+    padding: 10px 12px;
+    font-size: 0.86rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ap-page *,
+  .ap-page *::before,
+  .ap-page *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

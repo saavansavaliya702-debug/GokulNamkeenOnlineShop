@@ -5,6 +5,7 @@ import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "./AuthContext";
 import AdminNavbar from "../Navbar/AdminNavbar";
 import BackButton from "../components/BackButton";
+import { API_URL } from "../config/api";
 import "../Css/product.css";
 
 const CATEGORIES = [
@@ -137,7 +138,7 @@ const AddNamkeenProduct = () => {
 
       const token = localStorage.getItem("token");
 
-      const res = await fetch("https://gokulnamkeenonlineshop-backend.onrender.com/api/admin/products", {
+      const res = await fetch(`${API_URL}/admin/products`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

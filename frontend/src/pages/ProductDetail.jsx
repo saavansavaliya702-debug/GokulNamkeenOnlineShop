@@ -9,36 +9,15 @@ import { getImageUrl } from "../utils/image";
 import BackButton from "../components/BackButton";
 import "../Css/productDetail.css";
 
-/* ── NEW: Static fallback content ── */
 const NUTRITION = [
-  { label: "Energy",     value: "512 kcal" },
-  { label: "Protein",    value: "12.4 g"  },
-  { label: "Carbohydrates", value: "48.6 g" },
-  { label: "Total Fat",  value: "29.8 g"  },
-  { label: "Saturated Fat", value: "6.2 g" },
-  { label: "Dietary Fiber", value: "5.1 g" },
-  { label: "Sodium",     value: "780 mg"  },
-  { label: "Sugar",      value: "2.3 g"   },
-];
-
-const INGREDIENTS = [
-  "Bengal Gram Flour (Besan)",
-  "Rice Flour",
-  "Refined Sunflower Oil",
-  "Iodized Salt",
-  "Red Chilli Powder",
-  "Turmeric",
-  "Cumin Seeds",
-  "Asafoetida (Hing)",
-  "Curry Leaves",
-  "Dry Mango Powder (Amchur)",
-];
-
-const STORAGE_TIPS = [
-  { icon: "🌡️", title: "Cool & Dry",     desc: "Store in a cool, dry place away from direct sunlight." },
-  { icon: "🔒", title: "Airtight Container", desc: "Transfer to an airtight jar after opening to keep it crispy." },
-  { icon: "🥄", title: "Use Dry Spoon",  desc: "Always use a clean, dry spoon to avoid moisture." },
-  { icon: "⏳", title: "Best Within",    desc: "Consume within 30 days of opening for best taste." },
+  { field: "energy_kcal", label: "Energy", unit: "kcal" },
+  { field: "protein_g", label: "Protein", unit: "g" },
+  { field: "carbohydrates_g", label: "Carbohydrates", unit: "g" },
+  { field: "total_fat_g", label: "Total Fat", unit: "g" },
+  { field: "saturated_fat_g", label: "Saturated Fat", unit: "g" },
+  { field: "dietary_fiber_g", label: "Dietary Fiber", unit: "g" },
+  { field: "sodium_mg", label: "Sodium", unit: "mg" },
+  { field: "sugar_g", label: "Sugar", unit: "g" },
 ];
 
 const REVIEWS = [
@@ -608,16 +587,27 @@ const ProductDetail = () => {
                   {activeTab === "nutrition" && (
                     <div className="pd-tab-pane">
                       <p className="pd-tab-intro">
-                        Approximate nutritional values per 100 g serving.
+                        Nutritional values per 100 g serving.
                       </p>
-                      <div className="pd-nutrition-grid">
-                        {NUTRITION.map((n) => (
-                          <div key={n.label} className="pd-nutrition-item">
-                            <span className="pd-nutrition-label">{n.label}</span>
-                            <span className="pd-nutrition-value">{n.value}</span>
-                          </div>
-                        ))}
-                      </div>
+                      {product.nutrition ? (
+                        <div className="pd-nutrition-grid">
+                          {NUTRITION.map(({ field, label, unit }) => (
+                            <div key={field} className="pd-nutrition-item">
+                              <span className="pd-nutrition-label">{label}</span>
+                              <span className="pd-nutrition-value">
+                                {Number(product.nutrition[field]).toLocaleString(
+                                  "en-IN",
+                                )}{" "}
+                                {unit}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="pd-muted">
+                          Nutrition information is not available for this product.
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -660,17 +650,19 @@ const ProductDetail = () => {
                       <span>🥘</span> Ingredients
                     </h3>
                     <ul className="pd-ingredients-list">
-                      {INGREDIENTS.map((ing) => (
-                        <li key={ing}>
-                          <span className="pd-ing-dot" />
-                          {ing}
+                      {product.ingredients?.length ? (
+                        product.ingredients.map((ingredient) => (
+                          <li key={ingredient.id}>
+                            <span className="pd-ing-dot" />
+                            {ingredient.name}
+                          </li>
+                        ))
+                      ) : (
+                        <li className="pd-muted">
+                          Ingredient information is not available.
                         </li>
-                      ))}
+                      )}
                     </ul>
-                    <p className="pd-block-note">
-                      Contains allergens: may contain traces of peanuts and tree
-                      nuts.
-                    </p>
                   </div>
 
                   <div className="pd-info-block">
@@ -678,15 +670,26 @@ const ProductDetail = () => {
                       <span>📦</span> Storage Instructions
                     </h3>
                     <div className="pd-storage-grid">
-                      {STORAGE_TIPS.map((s) => (
-                        <div key={s.title} className="pd-storage-item">
-                          <span className="pd-storage-icon">{s.icon}</span>
-                          <div>
-                            <strong>{s.title}</strong>
-                            <p>{s.desc}</p>
+                      {product.storageInstructions?.length ? (
+                        product.storageInstructions.map((instruction) => (
+                          <div
+                            key={instruction.id}
+                            className="pd-storage-item"
+                          >
+                            <span className="pd-storage-icon">
+                              {instruction.icon || "📦"}
+                            </span>
+                            <div>
+                              <strong>{instruction.title}</strong>
+                              <p>{instruction.description}</p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))
+                      ) : (
+                        <p className="pd-muted">
+                          Storage instructions are not available.
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -23,6 +23,16 @@ const UNITS = [
   { value: "l", label: "liters (l)" },
   { value: "pcs", label: "pieces (pcs)" },
 ];
+const NUTRITION_FIELDS = [
+  { name: "energy_kcal", label: "Energy", unit: "kcal" },
+  { name: "protein_g", label: "Protein", unit: "g" },
+  { name: "carbohydrates_g", label: "Carbohydrates", unit: "g" },
+  { name: "total_fat_g", label: "Total fat", unit: "g" },
+  { name: "saturated_fat_g", label: "Saturated fat", unit: "g" },
+  { name: "dietary_fiber_g", label: "Dietary fiber", unit: "g" },
+  { name: "sodium_mg", label: "Sodium", unit: "mg" },
+  { name: "sugar_g", label: "Sugar", unit: "g" },
+];
 
 const AddProduct = () => {
   const [name, setName] = useState("");
@@ -34,6 +44,11 @@ const AddProduct = () => {
   const [weight, setWeight] = useState("");
   const [weightUnit, setWeightUnit] = useState("g");
   const [pcs, setPcs] = useState("");
+  const [nutrition, setNutrition] = useState({});
+  const [ingredients, setIngredients] = useState([""]);
+  const [storageInstructions, setStorageInstructions] = useState([
+    { icon: "", title: "", description: "" },
+  ]);
 
   const [imageMode, setImageMode] = useState("url");
   const [imageUrl, setImageUrl] = useState("");
@@ -119,6 +134,20 @@ const AddProduct = () => {
       toast.error("Low stock alert must be 0 or greater");
       return;
     }
+    const hasNutrition = Object.values(nutrition).some((value) => value !== "");
+    if (
+      hasNutrition &&
+      NUTRITION_FIELDS.some(
+        ({ name }) =>
+          nutrition[name] === "" ||
+          nutrition[name] === undefined ||
+          !Number.isFinite(Number(nutrition[name])) ||
+          Number(nutrition[name]) < 0,
+      )
+    ) {
+      toast.error("Enter a valid non-negative value for every nutrition field");
+      return;
+    }
 
     setLoading(true);
 
@@ -132,6 +161,34 @@ const AddProduct = () => {
     formData.append("low_stock_alert", lowStockAlert || "5"); // 👈 NEW
     formData.append("weight", weight);
     formData.append("weightUnit", weightUnit);
+    formData.append(
+      "nutrition",
+      JSON.stringify(
+        hasNutrition
+          ? Object.fromEntries(
+              NUTRITION_FIELDS.map(({ name }) => [name, Number(nutrition[name])]),
+            )
+          : null,
+      ),
+    );
+    formData.append(
+      "ingredients",
+      JSON.stringify(ingredients.map((name) => name.trim()).filter(Boolean)),
+    );
+    formData.append(
+      "storageInstructions",
+      JSON.stringify(
+        storageInstructions
+          .map((instruction) => ({
+            icon: instruction.icon.trim(),
+            title: instruction.title.trim(),
+            description: instruction.description.trim(),
+          }))
+          .filter(
+            (instruction) => instruction.title || instruction.description,
+          ),
+      ),
+    );
 
     if (imageMode === "file" && imageFile) {
       formData.append("image", imageFile);
@@ -156,6 +213,9 @@ const AddProduct = () => {
       setWeight("");
       setWeightUnit("g");
       setPcs("");
+      setNutrition({});
+      setIngredients([""]);
+      setStorageInstructions([{ icon: "", title: "", description: "" }]);
       setImageUrl("");
       setImageFile(null);
       setImagePreview("");
@@ -164,7 +224,9 @@ const AddProduct = () => {
       setTimeout(() => navigate("/record"), 800);
     } catch (err) {
       const message =
-        err.response?.data?.message || "Failed to add product";
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        "Failed to add product";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -255,7 +317,7 @@ const AddProduct = () => {
                 <section className="ap-section">
                   <h2 className="ap-section-title">Pricing & Inventory</h2>
 
-                  <div className="ap-row three">
+                  <div className="ap-row three ap-nutrition-grid">
                     <div className="ap-field">
                       <label htmlFor="price">
                         Price (₹) <span className="req">*</span>
@@ -362,6 +424,173 @@ const AddProduct = () => {
                       </select>
                     </div>
                   </div>
+                </section>
+
+                <section className="ap-section">
+                  <h2 className="ap-section-title">Nutrition per 100 g</h2>
+                  <p className="ap-hint">
+                    Optional. If you enter nutrition information, complete all
+                    fields.
+                  </p>
+                  <div className="ap-row three">
+                    {NUTRITION_FIELDS.map(({ name, label, unit }) => (
+                      <div className="ap-field" key={name}>
+                        <label htmlFor={name}>{label} ({unit})</label>
+                        <input
+                          id={name}
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={nutrition[name] ?? ""}
+                          onChange={(event) =>
+                            setNutrition((current) => ({
+                              ...current,
+                              [name]: event.target.value,
+                            }))
+                          }
+                          placeholder="Leave blank if unknown"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="ap-section">
+                  <h2 className="ap-section-title">Ingredients</h2>
+                  {ingredients.map((ingredient, index) => (
+                    <div className="ap-row ap-ingredient-row" key={`ingredient-${index}`}>
+                      <div className="ap-field ap-remove-field">
+                        <label htmlFor={`ingredient-${index}`}>
+                          Ingredient {index + 1}
+                        </label>
+                        <input
+                          id={`ingredient-${index}`}
+                          value={ingredient}
+                          onChange={(event) =>
+                            setIngredients((current) =>
+                              current.map((item, itemIndex) =>
+                                itemIndex === index
+                                  ? event.target.value
+                                  : item,
+                              ),
+                            )
+                          }
+                          placeholder="e.g. Bengal gram flour"
+                        />
+                      </div>
+                      <div className="ap-field">
+                        <label>&nbsp;</label>
+                        <button
+                          type="button"
+                          className="ap-btn ap-btn-secondary"
+                          onClick={() =>
+                            setIngredients((current) =>
+                              current.filter((_, itemIndex) => itemIndex !== index),
+                            )
+                          }
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="ap-btn ap-btn-secondary"
+                    onClick={() => setIngredients((current) => [...current, ""])}
+                  >
+                    Add ingredient
+                  </button>
+                </section>
+
+                <section className="ap-section">
+                  <h2 className="ap-section-title">Storage Instructions</h2>
+                  {storageInstructions.map((instruction, index) => (
+                    <div className="ap-storage-entry" key={`storage-${index}`}>
+                      <div className="ap-row three ap-storage-fields">
+                        <div className="ap-field">
+                          <label htmlFor={`storage-icon-${index}`}>Icon</label>
+                          <input
+                            id={`storage-icon-${index}`}
+                            value={instruction.icon}
+                            onChange={(event) =>
+                              setStorageInstructions((current) =>
+                                current.map((item, itemIndex) =>
+                                  itemIndex === index
+                                    ? { ...item, icon: event.target.value }
+                                    : item,
+                                ),
+                              )
+                            }
+                            placeholder="e.g. ❄️"
+                          />
+                        </div>
+                        <div className="ap-field">
+                          <label htmlFor={`storage-title-${index}`}>Title</label>
+                          <input
+                            id={`storage-title-${index}`}
+                            value={instruction.title}
+                            onChange={(event) =>
+                              setStorageInstructions((current) =>
+                                current.map((item, itemIndex) =>
+                                  itemIndex === index
+                                    ? { ...item, title: event.target.value }
+                                    : item,
+                                ),
+                              )
+                            }
+                            placeholder="e.g. Keep airtight"
+                          />
+                        </div>
+                        <div className="ap-field">
+                          <label htmlFor={`storage-description-${index}`}>
+                            Instruction
+                          </label>
+                          <textarea
+                            id={`storage-description-${index}`}
+                            rows={2}
+                            value={instruction.description}
+                            onChange={(event) =>
+                              setStorageInstructions((current) =>
+                                current.map((item, itemIndex) =>
+                                  itemIndex === index
+                                    ? {
+                                        ...item,
+                                        description: event.target.value,
+                                      }
+                                    : item,
+                                ),
+                              )
+                            }
+                            placeholder="Describe how to store the product"
+                          />
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        className="ap-btn ap-btn-secondary"
+                        onClick={() =>
+                          setStorageInstructions((current) =>
+                            current.filter((_, itemIndex) => itemIndex !== index),
+                          )
+                        }
+                      >
+                        Remove instruction
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    className="ap-btn ap-btn-secondary"
+                    onClick={() =>
+                      setStorageInstructions((current) => [
+                        ...current,
+                        { icon: "", title: "", description: "" },
+                      ])
+                    }
+                  >
+                    Add storage instruction
+                  </button>
                 </section>
               </div>
 

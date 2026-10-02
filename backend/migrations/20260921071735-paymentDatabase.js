@@ -11,8 +11,7 @@ module.exports = {
       },
       user_id: {
         type: Sequelize.INTEGER,
-        allowNull: true, // guests can order too
-       
+        allowNull: true,
         onUpdate: "CASCADE",
         onDelete: "SET NULL",
       },

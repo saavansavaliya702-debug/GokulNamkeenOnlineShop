@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");
 const { protect, adminOnly } = require("../middleware/auth");
-const { Order, AddProduct, Coupon } = require("../models");
+const { Payment, AddProduct, Coupon } = require("../models");
 const Razorpay = require("razorpay");
 
 function getRazorpay() {
@@ -134,7 +134,7 @@ async function restoreStockForOrder(order) {
 /* ═══════════════════════════════════════════════════════════════
    POST /api/payments/create-order — Razorpay
    ═══════════════════════════════════════════════════════════════ */
-router.post("/create-order", async (req, res) => {
+router.post("/create-order", protect, async (req, res) => {
   try {
     console.log("=== create-order hit ===");
     console.log("body:", req.body);
@@ -161,7 +161,7 @@ router.post("/create-order", async (req, res) => {
         const coupon = await Coupon.findOne({
           where: {
             code: String(coupon_code).toUpperCase(),
-            is_delete: false,
+            is_active: true,
           },
         });
         if (coupon) {
@@ -231,7 +231,7 @@ router.post("/create-order", async (req, res) => {
 /* ═══════════════════════════════════════════════════════════════
    POST /api/payments/verify — Razorpay signature check
    ═══════════════════════════════════════════════════════════════ */
-router.post("/verify", async (req, res) => {
+router.post("/verify", protect, async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
       req.body;
@@ -277,7 +277,7 @@ router.post("/verify", async (req, res) => {
 /* ═══════════════════════════════════════════════════════════════
    POST /api/payments — save order to DB (both COD & online)
    ═══════════════════════════════════════════════════════════════ */
-router.post("/", async (req, res) => {
+router.post("/", protect, async (req, res) => {
   try {
     const {
       items,
@@ -303,21 +303,6 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "No items in order" });
     }
 
-    let userId = null;
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      try {
-        const jwt = require("jsonwebtoken");
-        const decoded = jwt.verify(
-          authHeader.slice(7),
-          process.env.JWT_SECRET || "secret",
-        );
-        userId = decoded.id || decoded.userId || null;
-      } catch {
-        userId = null;
-      }
-    }
-
     /* Normalize item shape so reduceStockForOrder can match variants */
     const normalizedItems = items.map((it) => ({
       id: it.product_id ?? it.id ?? null,
@@ -331,8 +316,8 @@ router.post("/", async (req, res) => {
       pcs: Number(it.pcs) || 0,
     }));
 
-    const order = await Order.create({
-      user_id: userId,
+    const order = await Payment.create({
+      user_id: req.user.id,
       items: normalizedItems,
       subtotal: Number(subtotal) || 0,
       shipping: Number(shipping) || 0,
@@ -365,7 +350,7 @@ router.post("/", async (req, res) => {
    ═══════════════════════════════════════════════════════════════ */
 router.get("/", protect, adminOnly, async (req, res) => {
   try {
-    const orders = await Order.findAll({
+    const orders = await Payment.findAll({
       where: { is_delete: false },
       order: [["createdAt", "DESC"]],
     });
@@ -382,7 +367,7 @@ router.get("/", protect, adminOnly, async (req, res) => {
 router.get("/my-orders", protect, async (req, res) => {
   try {
     const userId = req.user?.id ?? req.user?.userId;
-    const orders = await Order.findAll({
+    const orders = await Payment.findAll({
       where: { user_id: userId, is_delete: false },
       order: [["createdAt", "DESC"]],
     });
@@ -399,7 +384,7 @@ router.get("/my-orders", protect, async (req, res) => {
    ═══════════════════════════════════════════════════════════════ */
 router.get("/:id", async (req, res) => {
   try {
-    const order = await Order.findByPk(req.params.id);
+    const order = await Payment.findByPk(req.params.id);
 
     if (!order || order.is_delete) {
       return res.status(404).json({ message: "Order not found" });
@@ -425,7 +410,7 @@ router.put("/:id/status", protect, adminOnly, async (req, res) => {
   try {
     const orderId = req.params.id;
 
-    const order = await Order.findByPk(orderId);
+    const order = await Payment.findByPk(orderId);
     if (!order) {
       console.log("   ❌ Order not found");
       return res.status(404).json({ message: "Order not found" });
@@ -467,7 +452,7 @@ router.put("/:id/status", protect, adminOnly, async (req, res) => {
       }
     }
 
-    const fresh = await Order.findByPk(orderId);
+    const fresh = await Payment.findByPk(orderId);
     res.json(fresh);
   } catch (err) {
     console.error("PUT /payments/:id/status error:", err);
@@ -480,7 +465,7 @@ router.put("/:id/status", protect, adminOnly, async (req, res) => {
    ═══════════════════════════════════════════════════════════════ */
 router.delete("/:id", protect, adminOnly, async (req, res) => {
   try {
-    const order = await Order.findByPk(req.params.id);
+    const order = await Payment.findByPk(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
     await order.update({ is_delete: true });

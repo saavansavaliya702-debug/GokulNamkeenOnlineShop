@@ -2,7 +2,7 @@ module.exports = (sequelize, DataTypes) => {
   const Coupon = sequelize.define(
     "Coupon",
     {
-      code:         { type: DataTypes.STRING, allowNull: false },
+      code:         { type: DataTypes.STRING, allowNull: false, unique: true },
       type:         { type: DataTypes.ENUM("percent", "flat"), allowNull: false, defaultValue: "percent" },
       value:        { type: DataTypes.DECIMAL(10, 2), allowNull: false },
       min_order:    { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       timestamps: true,
       tableName: "CouponsDatabase",   // 👈 MUST match the migration
+      indexes: [{ fields: ["is_active"] }],
     }
   );
   return Coupon;

@@ -3,9 +3,10 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
+import { API_URL } from "../config/api";
 import "../Css/login.css";
 
-const API = "https://gokulnamkeenonlineshop-backend.onrender.com/api/auth";
+const API = `${API_URL}/auth`;
 
 const Register = () => {
   const [formData, setFormData] = useState({

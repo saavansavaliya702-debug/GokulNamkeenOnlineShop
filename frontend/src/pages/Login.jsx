@@ -1,12 +1,13 @@
 // src/components/Login.jsx
 import { useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { useAuth } from "../pages/AuthContext";
+import { API_URL } from "../config/api";
 import "../Css/login.css";
 
-const API = "https://gokulnamkeenonlineshop-backend.onrender.com/api/auth";
+const API = `${API_URL}/auth`;
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -16,6 +17,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
+  const location = useLocation();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -26,7 +28,7 @@ const Login = () => {
     if (userData?.is_admin) {
       window.location.href = "/dashboard";
     } else {
-      window.location.href = "/";
+      window.location.href = location.state?.from?.pathname || "/";
     }
   };
 
